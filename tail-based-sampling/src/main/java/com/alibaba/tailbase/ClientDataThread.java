@@ -63,30 +63,27 @@ public class ClientDataThread extends Thread {
                 }
                 if (count % Constants.BATCH_SIZE == 0) {
                     pos = ClientProcessData.POS.getAndIncrement();
-                    int batchPos = pos - 1;
                     // loop cycle
                     if (pos >= ClientProcessData.BATCH_COUNT) {
+                        ClientProcessData.POS.set(0);
                         pos = 0;
                     }
 
-                    traceMap = ClientProcessData.BATCH_TRACE_LIST.get(pos);
-                    // donot produce data, wait backend to consume data
-                    // TODO to use lock/notify
-                    if (traceMap.size() > 0) {
-                        while (true) {
-                            Thread.sleep(10);
-                            if (traceMap.size() == 0) {
-                                break;
-                            }
+                    int batchPos = ClientProcessData.BATCH_POS.getAndIncrement();
+                    while ( ClientProcessData.BATCH_TRACE_LIST.get(pos).size() > 0) {
+                        pos = ClientProcessData.POS.getAndIncrement();
+
+                        if (pos >= ClientProcessData.BATCH_COUNT) {
+                            pos = 0;
                         }
+
+                        batchPos = ClientProcessData.BATCH_POS.getAndIncrement();
                     }
 
-                    if (badTraceIdList.size() > 0) {
-                        updateWrongTraceId(badTraceIdList, batchPos);
-                        badTraceIdList.clear();
+                    updateWrongTraceId(badTraceIdList, batchPos);
+                    badTraceIdList.clear();
+                    LOGGER.info("suc to updateBadTraceId, batchPos:" + batchPos);
 
-                        LOGGER.info("suc to updateBadTraceId, batchPos:" + pos);
-                    }
                 }
             }
             input.close();

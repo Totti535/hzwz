@@ -33,7 +33,7 @@ public class ClientProcessData implements Runnable {
     public static AtomicInteger POS;
 
     // an list of trace map,like ring buffe.  key is traceId, value is spans ,  r
-    public static List<Map<String, List<String>>> BATCH_TRACE_LIST = new ArrayList<>();
+    public static Vector<Map<String, List<String>>> BATCH_TRACE_LIST = new Vector<>();
     // make 50 bucket to cache traceData
     public static int BATCH_COUNT = 15;
 
