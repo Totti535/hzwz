@@ -20,11 +20,13 @@ public class ClientDataThread extends Thread {
     private long startPos;
     private long currentPartSize;
     private InputStream input;
+    private int threadNumber;
 
-    public ClientDataThread(long startPos, long currentPartSize, InputStream input) {
+    public ClientDataThread(long startPos, long currentPartSize, InputStream input, int threadNumber) {
         this.startPos = startPos;
         this.currentPartSize = currentPartSize;
         this.input = input;
+        this.threadNumber = threadNumber;
     }
 
     public void run() {
@@ -34,13 +36,16 @@ public class ClientDataThread extends Thread {
             this.input.skip(startPos);
             BufferedReader bf = new BufferedReader(new InputStreamReader(this.input));
 
-            int pos = ClientProcessData.POS.getAndIncrement();
+            int pos = this.threadNumber;
+            int batchPos = this.threadNumber;
             Set<String> badTraceIdList = new HashSet<>(1000);
 
-            while (count < currentPartSize && (line = bf.readLine()) != null) {
+            long byteRead = 0;
+            while (byteRead < currentPartSize && (line = bf.readLine()) != null) {
+                byteRead += line.getBytes().length;
+
                 Map<String, List<String>> traceMap = ClientProcessData.BATCH_TRACE_LIST.get(pos);
                 count++;
-
                 String[] cols = line.split("\\|");
                 if (cols != null && cols.length > 1) {
                     String traceId = cols[0];
@@ -62,11 +67,9 @@ public class ClientDataThread extends Thread {
                     }
                 }
                 if (count % Constants.BATCH_SIZE == 0) {
-                    pos = ClientProcessData.POS.getAndIncrement();
-                    // loop cycle
+                    pos += ClientProcessData.NUMBER_OF_THREAD;
                     if (pos >= ClientProcessData.BATCH_COUNT) {
-                        ClientProcessData.POS.set(1);
-                        pos = 0;
+                        pos = pos % ClientProcessData.BATCH_COUNT;
                     }
 
                     traceMap = ClientProcessData.BATCH_TRACE_LIST.get(pos);
@@ -78,20 +81,18 @@ public class ClientDataThread extends Thread {
                             }
                         }
                     }
-                    int batchPos = ClientProcessData.BATCH_POS.getAndIncrement();
                     updateWrongTraceId(badTraceIdList, batchPos);
                     badTraceIdList.clear();
-                    LOGGER.info("suc to updateBadTraceId, batchPos:" + batchPos);
+                    LOGGER.info(String.format("suc to updateBadTraceId, batchPos: %s, pos: %s", batchPos, pos));
+
+                    batchPos += ClientProcessData.NUMBER_OF_THREAD;
 
                 }
             }
+            LOGGER.info(String.format("%s lines and %s bytes read by thread: %s", count, byteRead, Thread.currentThread()));
             input.close();
         } catch (Exception e) {
             e.printStackTrace();
-        } finally {
-            synchronized (ClientProcessData.lock) {
-                ClientProcessData.lock.notify();
-            }
         }
     }
 

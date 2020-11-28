@@ -17,7 +17,6 @@ import java.net.Proxy;
 import java.net.URL;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 
@@ -25,25 +24,19 @@ public class ClientProcessData implements Runnable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ClientProcessData.class.getName());
 
-    private static final int NUMBER_OF_THREAD = 1;
+    public static final int NUMBER_OF_THREAD = 4;
+    public static final Object thread_lock = new Object();
     private Thread[] threads = new ClientDataThread[NUMBER_OF_THREAD];
-
-    public static Object lock;
-    public static AtomicInteger BATCH_POS;
-    public static AtomicInteger POS;
 
     // an list of trace map,like ring buffe.  key is traceId, value is spans ,  r
     public static Vector<Map<String, List<String>>> BATCH_TRACE_LIST = new Vector<>();
     // make 50 bucket to cache traceData
-    public static int BATCH_COUNT = 15;
+    public static int BATCH_COUNT = 16;
 
     public static void init() {
         for (int i = 0; i < BATCH_COUNT; i++) {
             BATCH_TRACE_LIST.add(new ConcurrentHashMap<>(Constants.BATCH_SIZE));
         }
-        lock = new Object();
-        BATCH_POS = new AtomicInteger();
-        POS = new AtomicInteger();
     }
 
     public static void start() {
@@ -54,22 +47,29 @@ public class ClientProcessData implements Runnable {
     @Override
     public void run() {
         try {
+            ExecutorService threadPool = Executors.newFixedThreadPool(NUMBER_OF_THREAD);
+            Future<?>[] futures = new Future<?>[NUMBER_OF_THREAD];
+
             long dataSize = getSourceDataSize();
             long currentPartSize = dataSize / NUMBER_OF_THREAD + 1;
 
             for (int i = 0; i < NUMBER_OF_THREAD; i++) {
                 long startPos = i * currentPartSize;
-                threads[i] = new ClientDataThread(startPos, currentPartSize, getSourceDataInputStream());
-                threads[i].start();
+                threads[i] = new ClientDataThread(startPos, currentPartSize, getSourceDataInputStream(), i);
+                futures[i] = threadPool.submit(threads[i]);
             }
 
-            synchronized (this.lock) {
-                lock.wait();
+            long startTime = System.currentTimeMillis();
+            threadPool.awaitTermination(2, TimeUnit.SECONDS);
+            for (Future<?> future : futures) {
+                future.get();
             }
 
+
+            LOGGER.info("Time used(second): " + (double) ((System.currentTimeMillis() - startTime) / 1000));
         } catch (Exception e) {
             LOGGER.warn("fail to process data", e);
-        }finally {
+        } finally {
             callFinish();
         }
     }
@@ -100,11 +100,14 @@ public class ClientProcessData implements Runnable {
         if (next == BATCH_COUNT) {
             next = 0;
         }
-        getWrongTraceWithBatch(previous, pos, traceIdList, wrongTraceMap);
-        getWrongTraceWithBatch(pos, pos, traceIdList, wrongTraceMap);
-        getWrongTraceWithBatch(next, pos, traceIdList, wrongTraceMap);
-        // to clear spans, don't block client process thread. TODO to use lock/notify
-        BATCH_TRACE_LIST.get(previous).clear();
+
+        synchronized (thread_lock) {
+            getWrongTraceWithBatch(previous, pos, traceIdList, wrongTraceMap);
+            getWrongTraceWithBatch(pos, pos, traceIdList, wrongTraceMap);
+            getWrongTraceWithBatch(next, pos, traceIdList, wrongTraceMap);
+            // to clear spans, don't block client process thread. TODO to use lock/notify
+            BATCH_TRACE_LIST.get(previous).clear();
+        }
         return JSON.toJSONString(wrongTraceMap);
     }
 
