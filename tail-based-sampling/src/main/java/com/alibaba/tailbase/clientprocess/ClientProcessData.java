@@ -149,10 +149,18 @@ public class ClientProcessData implements Runnable {
     }
 
     private InputStream getSourceDataInputStream() throws IOException {
-        InputStream input;
+        InputStream input = null;
         if (isDev()) {
-            File file = new File("C:\\Users\\55733\\Desktop\\doc\\demo_data\\trace1.data");
-            input = new FileInputStream(file);
+            if ("8000".equals(System.getProperty("server.port", "8000"))) {
+                File file = new File("C:\\Users\\55733\\Desktop\\doc\\demo_data\\trace1.data");
+                input = new FileInputStream(file);
+            }
+
+            if ("8001".equals(System.getProperty("server.port", "8000"))) {
+                File file = new File("C:\\Users\\55733\\Desktop\\doc\\demo_data\\trace2.data");
+                input = new FileInputStream(file);
+            }
+
         } else {
             String path = getPath();
             // process data on client, not server
