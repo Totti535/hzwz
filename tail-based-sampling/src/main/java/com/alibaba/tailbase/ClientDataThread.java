@@ -65,21 +65,20 @@ public class ClientDataThread extends Thread {
                     pos = ClientProcessData.POS.getAndIncrement();
                     // loop cycle
                     if (pos >= ClientProcessData.BATCH_COUNT) {
-                        ClientProcessData.POS.set(0);
+                        ClientProcessData.POS.set(1);
                         pos = 0;
                     }
 
-                    int batchPos = ClientProcessData.BATCH_POS.getAndIncrement();
-                    while ( ClientProcessData.BATCH_TRACE_LIST.get(pos).size() > 0) {
-                        pos = ClientProcessData.POS.getAndIncrement();
-
-                        if (pos >= ClientProcessData.BATCH_COUNT) {
-                            pos = 0;
+                    traceMap = ClientProcessData.BATCH_TRACE_LIST.get(pos);
+                    if (traceMap.size() > 0) {
+                        while (true) {
+                            Thread.sleep(10);
+                            if (traceMap.size() == 0) {
+                                break;
+                            }
                         }
-
-                        batchPos = ClientProcessData.BATCH_POS.getAndIncrement();
                     }
-
+                    int batchPos = ClientProcessData.BATCH_POS.getAndIncrement();
                     updateWrongTraceId(badTraceIdList, batchPos);
                     badTraceIdList.clear();
                     LOGGER.info("suc to updateBadTraceId, batchPos:" + batchPos);
