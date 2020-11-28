@@ -25,7 +25,7 @@ public class ClientProcessData implements Runnable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ClientProcessData.class.getName());
 
-    private static final int NUMBER_OF_THREAD = 2;
+    private static final int NUMBER_OF_THREAD = 1;
     private Thread[] threads = new ClientDataThread[NUMBER_OF_THREAD];
 
     public static Object lock;
@@ -69,13 +69,13 @@ public class ClientProcessData implements Runnable {
 
         } catch (Exception e) {
             LOGGER.warn("fail to process data", e);
-        } finally {
+        }finally {
             callFinish();
         }
     }
 
     // notify backend process when client process has finished.
-    private void callFinish() {
+    public void callFinish() {
         try {
             Request request = new Request.Builder().url("http://localhost:8002/finish").build();
             Response response = Utils.callHttp(request);
