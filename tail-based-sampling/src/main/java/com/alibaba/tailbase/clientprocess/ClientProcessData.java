@@ -18,7 +18,6 @@ import java.net.URL;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 
@@ -32,9 +31,9 @@ public class ClientProcessData implements Runnable {
     private static final int NUMBER_OF_THREAD = 2;
     private Thread[] threads = new ClientDataThread[NUMBER_OF_THREAD];
 
-    private ExecutorService threadPool = Executors.newFixedThreadPool(NUMBER_OF_THREAD);
-
-    public static AtomicInteger BATCH_POS = new AtomicInteger();
+    public static Object lock;
+    public static AtomicInteger BATCH_POS;
+    public static AtomicInteger POS;
 
     // an list of trace map,like ring buffe.  key is traceId, value is spans ,  r
     public static List<Map<String, List<String>>> BATCH_TRACE_LIST = new ArrayList<>();
@@ -45,6 +44,9 @@ public class ClientProcessData implements Runnable {
         for (int i = 0; i < BATCH_COUNT; i++) {
             BATCH_TRACE_LIST.add(new ConcurrentHashMap<>(Constants.BATCH_SIZE));
         }
+        lock = new Object();
+        BATCH_POS = new AtomicInteger();
+        POS = new AtomicInteger();
     }
 
     public static void start() {
@@ -58,14 +60,16 @@ public class ClientProcessData implements Runnable {
             long dataSize = getSourceDataSize();
             long currentPartSize = dataSize / NUMBER_OF_THREAD + 1;
 
-            Object lock = new Object();
             for (int i = 0; i < NUMBER_OF_THREAD; i++) {
                 long startPos = i * currentPartSize;
                 threads[i] = new ClientDataThread(i, startPos, currentPartSize, getSourceDataInputStream());
-
-                if (i == 1)
-                    threads[i].start();
+                threads[i].start();
             }
+
+            synchronized (this.lock) {
+                lock.wait();
+            }
+
         } catch (Exception e) {
             LOGGER.warn("fail to process data", e);
         } finally {

@@ -34,13 +34,13 @@ public class ClientDataThread extends Thread {
     public void run() {
         String line;
         long count = 0;
-        int pos = order * (int) (this.currentPartSize / Constants.BATCH_SIZE + 1);
         try {
             this.input.skip(startPos);
-
             BufferedReader bf = new BufferedReader(new InputStreamReader(this.input));
             while (count < currentPartSize && (line = bf.readLine()) != null) {
                 Set<String> badTraceIdList = new HashSet<>(1000);
+
+                int pos = ClientProcessData.POS.getAndIncrement();
                 Map<String, List<String>> traceMap = ClientProcessData.BATCH_TRACE_LIST.get(pos);
 
                 count++;
@@ -69,7 +69,7 @@ public class ClientDataThread extends Thread {
                     pos++;
                     // loop cycle
                     if (pos >= ClientProcessData.BATCH_COUNT) {
-                        pos = order * (int) (this.currentPartSize / Constants.BATCH_SIZE + 1);
+                        pos = 0;
                     }
                     traceMap = ClientProcessData.BATCH_TRACE_LIST.get(pos);
                     // donot produce data, wait backend to consume data
@@ -93,6 +93,10 @@ public class ClientDataThread extends Thread {
             input.close();
         } catch (Exception e) {
             e.printStackTrace();
+        } finally {
+            synchronized (ClientProcessData.lock) {
+                lock.notify();
+            }
         }
     }
 
