@@ -37,7 +37,6 @@ public class ClientDataThread extends Thread {
             int pos = ClientProcessData.POS.getAndIncrement();
             Set<String> badTraceIdList = new HashSet<>(1000);
 
-            currentPartSize = 20000;
             while (count < currentPartSize && (line = bf.readLine()) != null) {
                 Map<String, List<String>> traceMap = ClientProcessData.BATCH_TRACE_LIST.get(pos);
                 count++;
@@ -64,13 +63,26 @@ public class ClientDataThread extends Thread {
                 }
                 if (count % Constants.BATCH_SIZE == 0) {
                     pos = ClientProcessData.POS.getAndIncrement();
+                    int batchPos = pos - 1;
                     // loop cycle
                     if (pos >= ClientProcessData.BATCH_COUNT) {
                         pos = 0;
                     }
 
+                    traceMap = ClientProcessData.BATCH_TRACE_LIST.get(pos);
+                    // donot produce data, wait backend to consume data
+                    // TODO to use lock/notify
+                    if (traceMap.size() > 0) {
+                        while (true) {
+                            Thread.sleep(10);
+                            if (traceMap.size() == 0) {
+                                break;
+                            }
+                        }
+                    }
+
                     if (badTraceIdList.size() > 0) {
-                        updateWrongTraceId(badTraceIdList, pos);
+                        updateWrongTraceId(badTraceIdList, batchPos);
                         badTraceIdList.clear();
 
                         LOGGER.info("suc to updateBadTraceId, batchPos:" + pos);
