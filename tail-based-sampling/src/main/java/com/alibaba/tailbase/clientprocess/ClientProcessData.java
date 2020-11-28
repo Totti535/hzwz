@@ -25,9 +25,6 @@ public class ClientProcessData implements Runnable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ClientProcessData.class.getName());
 
-    public static final String INPUT = "input";
-    public static final String LENGTH = "length";
-
     private static final int NUMBER_OF_THREAD = 2;
     private Thread[] threads = new ClientDataThread[NUMBER_OF_THREAD];
 
@@ -62,7 +59,7 @@ public class ClientProcessData implements Runnable {
 
             for (int i = 0; i < NUMBER_OF_THREAD; i++) {
                 long startPos = i * currentPartSize;
-                threads[i] = new ClientDataThread(i, startPos, currentPartSize, getSourceDataInputStream());
+                threads[i] = new ClientDataThread(startPos, currentPartSize, getSourceDataInputStream());
                 threads[i].start();
             }
 
@@ -188,36 +185,5 @@ public class ClientProcessData implements Runnable {
             size = httpConnection.getContentLengthLong();
         }
         return size;
-    }
-
-    private Map<String, Object> getSourceDataFromLocal() throws IOException {
-
-        Map<String, Object> result = new HashMap<>();
-        File file = new File("C:\\Users\\55733\\Desktop\\doc\\demo_data\\trace1.data");
-        InputStream input = new FileInputStream(file);
-
-        result.put(LENGTH, file.length());
-        result.put(INPUT, input);
-        return result;
-    }
-
-    private Map<String, Object> getSourceDataFromServer() throws IOException {
-        String path = getPath();
-        // process data on client, not server
-        if (StringUtils.isEmpty(path)) {
-            LOGGER.warn("path is empty");
-            throw new IOException("path is empty");
-        }
-
-        Map<String, Object> result = new HashMap<>();
-        URL url = new URL(path);
-        LOGGER.info("data path:" + path);
-        HttpURLConnection httpConnection = (HttpURLConnection) url.openConnection(Proxy.NO_PROXY);
-        InputStream input = httpConnection.getInputStream();
-
-        result.put(LENGTH, httpConnection.getContentLengthLong());
-        result.put(INPUT, input);
-
-        return result;
     }
 }

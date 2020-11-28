@@ -17,15 +17,11 @@ import java.util.*;
 public class ClientDataThread extends Thread {
     private static final Logger LOGGER = LoggerFactory.getLogger(ClientDataThread.class.getName());
 
-    private int order;
-
     private long startPos;
     private long currentPartSize;
     private InputStream input;
-    private Object lock;
 
-    public ClientDataThread(int order, long startPos, long currentPartSize, InputStream input) {
-        this.order = order;
+    public ClientDataThread(long startPos, long currentPartSize, InputStream input) {
         this.startPos = startPos;
         this.currentPartSize = currentPartSize;
         this.input = input;
@@ -37,12 +33,11 @@ public class ClientDataThread extends Thread {
         try {
             this.input.skip(startPos);
             BufferedReader bf = new BufferedReader(new InputStreamReader(this.input));
+
+            int pos = ClientProcessData.POS.getAndIncrement();
             while (count < currentPartSize && (line = bf.readLine()) != null) {
                 Set<String> badTraceIdList = new HashSet<>(1000);
-
-                int pos = ClientProcessData.POS.getAndIncrement();
                 Map<String, List<String>> traceMap = ClientProcessData.BATCH_TRACE_LIST.get(pos);
-
                 count++;
 
                 String[] cols = line.split("\\|");
@@ -66,7 +61,7 @@ public class ClientDataThread extends Thread {
                     }
                 }
                 if (count % Constants.BATCH_SIZE == 0) {
-                    pos++;
+                    pos = ClientProcessData.POS.getAndIncrement();
                     // loop cycle
                     if (pos >= ClientProcessData.BATCH_COUNT) {
                         pos = 0;
@@ -95,7 +90,7 @@ public class ClientDataThread extends Thread {
             e.printStackTrace();
         } finally {
             synchronized (ClientProcessData.lock) {
-                lock.notify();
+                ClientProcessData.lock.notify();
             }
         }
     }
