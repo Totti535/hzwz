@@ -13,6 +13,9 @@ import org.springframework.util.StringUtils;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.File;
 import java.net.HttpURLConnection;
 import java.net.Proxy;
 import java.net.URL;
@@ -27,8 +30,12 @@ public class ClientProcessData implements Runnable {
 
     // an list of trace map,like ring buffe.  key is traceId, value is spans ,  r
     private static List<Map<String,List<String>>> BATCH_TRACE_LIST = new ArrayList<>();
+
+    public static  Queue<String> SOURCE_DATA_QUEUE = new LinkedList<>();
+
     // make 50 bucket to cache traceData
     private static int BATCH_COUNT = 15;
+
     public static  void init() {
         for (int i = 0; i < BATCH_COUNT; i++) {
             BATCH_TRACE_LIST.add(new ConcurrentHashMap<>(Constants.BATCH_SIZE));
@@ -43,74 +50,23 @@ public class ClientProcessData implements Runnable {
     @Override
     public void run() {
         try {
-            String path = getPath();
-            // process data on client, not server
-            if (StringUtils.isEmpty(path)) {
-                LOGGER.warn("path is empty");
-                return;
-            }
-            URL url = new URL(path);
-            LOGGER.info("data path:" + path);
-            HttpURLConnection httpConnection = (HttpURLConnection) url.openConnection(Proxy.NO_PROXY);
-            InputStream input = httpConnection.getInputStream();
+            InputStream input = getSourceDataInputStream();
             BufferedReader bf = new BufferedReader(new InputStreamReader(input));
+
             String line;
             long count = 0;
-            int pos = 0;
-            Set<String> badTraceIdList = new HashSet<>(1000);
-            Map<String, List<String>> traceMap = BATCH_TRACE_LIST.get(pos);
             while ((line = bf.readLine()) != null) {
-                count++;
-                String[] cols = line.split("\\|");
-                if (cols != null && cols.length > 1 ) {
-                    String traceId = cols[0];
-                    List<String> spanList = traceMap.get(traceId);
-                    if (spanList == null) {
-                        spanList = new ArrayList<>();
-                        traceMap.put(traceId, spanList);
-                    }
-                    spanList.add(line);
-                    if (cols.length > 8) {
-                        String tags = cols[8];
-                        if (tags != null) {
-                            if (tags.contains("error=1")) {
-                                badTraceIdList.add(traceId);
-                            } else if (tags.contains("http.status_code=") && tags.indexOf("http.status_code=200") < 0) {
-                                badTraceIdList.add(traceId);
-                            }
-                        }
-                    }
-                }
-                if (count % Constants.BATCH_SIZE == 0) {
-                    pos++;
-                    // loop cycle
-                    if (pos >= BATCH_COUNT) {
-                        pos = 0;
-                    }
-                    traceMap = BATCH_TRACE_LIST.get(pos);
-                    // donot produce data, wait backend to consume data
-                    // TODO to use lock/notify
-                    if (traceMap.size() > 0) {
-                        while (true) {
-                            Thread.sleep(10);
-                            if (traceMap.size() == 0) {
-                                break;
-                            }
-                        }
-                    }
-                    // batchPos begin from 0, so need to minus 1
-                    int batchPos = (int) count / Constants.BATCH_SIZE - 1;
-                    updateWrongTraceId(badTraceIdList, batchPos);
-                    badTraceIdList.clear();
-                    LOGGER.info("suc to updateBadTraceId, batchPos:" + batchPos);
+                if (SOURCE_DATA_QUEUE.size() <= Constants.BATCH_SIZE * 4) {
+                    SOURCE_DATA_QUEUE.offer(line);
+                    count++;
                 }
             }
-            updateWrongTraceId(badTraceIdList, (int) (count / Constants.BATCH_SIZE - 1));
+
             bf.close();
             input.close();
-            callFinish();
+            LOGGER.info(String.format(" read %s lines.", count));
         } catch (Exception e) {
-            LOGGER.warn("fail to process data", e);
+            LOGGER.warn("fail to read source data", e);
         }
     }
 
@@ -199,6 +155,39 @@ public class ClientProcessData implements Runnable {
         } else {
             return null;
         }
+    }
+
+    private boolean isDev() {
+        return Boolean.valueOf(System.getProperty("is.dev", "false"));
+    }
+
+    private InputStream getSourceDataInputStream() throws IOException {
+        InputStream input = null;
+        if (isDev()) {
+            if ("8000".equals(System.getProperty("server.port", "8000"))) {
+                File file = new File("C:\\Users\\55733\\Desktop\\doc\\demo_data\\trace1.data");
+                input = new FileInputStream(file);
+            }
+
+            if ("8001".equals(System.getProperty("server.port", "8000"))) {
+                File file = new File("C:\\Users\\55733\\Desktop\\doc\\demo_data\\trace2.data");
+                input = new FileInputStream(file);
+            }
+
+        } else {
+            String path = getPath();
+            // process data on client, not server
+            if (StringUtils.isEmpty(path)) {
+                LOGGER.warn("path is empty");
+                throw new IOException("path is empty");
+            }
+
+            URL url = new URL(path);
+            LOGGER.info("data path:" + path);
+            HttpURLConnection httpConnection = (HttpURLConnection) url.openConnection(Proxy.NO_PROXY);
+            input = httpConnection.getInputStream();
+        }
+        return input;
     }
 
 }
