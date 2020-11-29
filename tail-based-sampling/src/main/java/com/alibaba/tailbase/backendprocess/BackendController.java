@@ -25,7 +25,7 @@ public class BackendController {
     private static volatile Integer CURRENT_BATCH = 0;
 
     // save 90 batch for wrong trace
-    private static int BATCH_COUNT = 96;
+    private static int BATCH_COUNT = 90;
     private static List<TraceIdBatch> TRACEID_BATCH_LIST= new ArrayList<>();
     public static  void init() {
         for (int i = 0; i < BATCH_COUNT; i++) {
