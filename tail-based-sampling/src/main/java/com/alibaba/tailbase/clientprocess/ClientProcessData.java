@@ -30,6 +30,7 @@ public class ClientProcessData implements Runnable {
 
     // an list of trace map,like ring buffe.  key is traceId, value is spans ,  r
     public static Vector<Map<String, List<String>>> BATCH_TRACE_LIST = new Vector<>();
+
     // make 50 bucket to cache traceData
     public static int BATCH_COUNT = 16;
 
@@ -60,7 +61,7 @@ public class ClientProcessData implements Runnable {
             }
 
             long startTime = System.currentTimeMillis();
-            threadPool.awaitTermination(2, TimeUnit.SECONDS);
+            threadPool.awaitTermination(1, TimeUnit.SECONDS);
             for (Future<?> future : futures) {
                 future.get();
             }
