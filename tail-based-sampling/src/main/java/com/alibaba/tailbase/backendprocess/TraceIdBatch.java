@@ -18,7 +18,7 @@ public class TraceIdBatch {
     }
 
     public boolean isReady() {
-       return this.ports.containsAll(Arrays.asList(Constants.CLIENT_DATA_PORTS));
+       return this.ports.size() == Constants.CLIENT_DATA_PORTS.length;
     }
 
 }
