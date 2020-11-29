@@ -17,10 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
-
-import static com.alibaba.tailbase.Constants.PROCESS_COUNT;
 
 @RestController
 public class BackendController {
@@ -32,12 +29,11 @@ public class BackendController {
     // FINISH_PROCESS_COUNT will add one, when process call finish();
     private static volatile Integer FINISH_PROCESS_COUNT = 0;
 
-    private static Map<Integer, TraceIdBatch> TRACEID_BATCH_MAP;
+    private static Map<Integer, TraceIdBatch> BAD_TRACE_ID_MAP;
 
     public static void init() {
-        TRACEID_BATCH_MAP = new HashMap<>();
+        BAD_TRACE_ID_MAP = new HashMap<>();
     }
-
 
     @RequestMapping("/setWrongTraceId")
     public String setWrongTraceId(@RequestParam String traceIdListJson, @RequestParam Integer batchId, @RequestParam Integer port) {
@@ -48,22 +44,22 @@ public class BackendController {
             return "nothing to set.";
         }
 
-        LOGGER.info(String.format("setWrongTraceId had called, batchId:%d, port:%s, traceIdList:%s", batchId, port, traceIdListJson));
+        LOGGER.info(String.format("setWrongTraceId had been called, batchId:%d, port:%s, traceIdList:%s", batchId, port, traceIdListJson));
 
-        TraceIdBatch traceIdBatch = TRACEID_BATCH_MAP.get(batchId);
+        TraceIdBatch traceIdBatch = BAD_TRACE_ID_MAP.get(batchId);
         if (traceIdBatch == null) {
             traceIdBatch = new TraceIdBatch();
         }
         traceIdBatch.getPorts().add(port);
         traceIdBatch.getTraceIdList().addAll(traceIdList);
 
-        TRACEID_BATCH_MAP.put(batchId, traceIdBatch);
+        BAD_TRACE_ID_MAP.put(batchId, traceIdBatch);
         return "suc";
     }
 
     @RequestMapping("/notifyToGetData")
     public String notifyToGetData(@RequestParam Integer batchId) {
-        TraceIdBatch traceIdBatch = TRACEID_BATCH_MAP.get(batchId);
+        TraceIdBatch traceIdBatch = BAD_TRACE_ID_MAP.get(batchId);
 
         if (traceIdBatch == null || !traceIdBatch.isReady()) {
             LOGGER.info(String.format("batch id: %s is not yet read to get data.", batchId));
@@ -78,20 +74,20 @@ public class BackendController {
     @RequestMapping("/finish")
     public String finish() {
         FINISH_PROCESS_COUNT++;
+
         LOGGER.info("receive call 'finish', count:" + FINISH_PROCESS_COUNT);
 
-
         if (FINISH_PROCESS_COUNT == Constants.CLIENT_DATA_PORTS.length) {
-            for (Integer batchId : TRACEID_BATCH_MAP.keySet()) {
-                handleWrongTrace(batchId, TRACEID_BATCH_MAP.get(batchId));
+
+            for (Integer batchId : BAD_TRACE_ID_MAP.keySet()) {
+                //handle the rest of trace id in the map.
+                handleWrongTrace(batchId, BAD_TRACE_ID_MAP.get(batchId));
             }
         }
 
         sendCheckSum();
         return "suc";
     }
-
-
 
     private void handleWrongTrace(Integer batchId, TraceIdBatch traceIdBatch) {
         Map<String, Set<String>> map = new HashMap<>();
@@ -111,7 +107,7 @@ public class BackendController {
         }
         LOGGER.info("getWrong batchId:" + batchId + ", traceIdsize:" + traceIdBatch.getTraceIdList().size() + ",result:" + map.size());
 
-        TRACEID_BATCH_MAP.remove(batchId);
+        BAD_TRACE_ID_MAP.remove(batchId);
 
         for (Map.Entry<String, Set<String>> entry : map.entrySet()) {
             String traceId = entry.getKey();
@@ -144,7 +140,6 @@ public class BackendController {
         }
         return null;
     }
-
 
     private boolean sendCheckSum() {
         try {
