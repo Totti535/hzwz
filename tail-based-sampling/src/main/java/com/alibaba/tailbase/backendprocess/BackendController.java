@@ -2,13 +2,7 @@ package com.alibaba.tailbase.backendprocess;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
-import com.alibaba.tailbase.CommonController;
 import com.alibaba.tailbase.Constants;
-import com.alibaba.tailbase.Utils;
-import okhttp3.FormBody;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,161 +10,120 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
+
+import static com.alibaba.tailbase.Constants.PROCESS_COUNT;
 
 @RestController
 public class BackendController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BackendController.class.getName());
 
-    private static Map<String, String> TRACE_CHECKSUM_MAP = new ConcurrentHashMap<>();
-
     // FINISH_PROCESS_COUNT will add one, when process call finish();
     private static volatile Integer FINISH_PROCESS_COUNT = 0;
 
-    private static Map<Integer, TraceIdBatch> BAD_TRACE_ID_MAP;
+    // single thread to run, do not use lock
+    private static volatile Integer CURRENT_BATCH = 0;
+
+    // save 90 batch for wrong trace
+    private static int BATCH_COUNT = 90;
+    private static List<TraceIdBatch> TRACEID_BATCH_LIST = new ArrayList<>();
 
     public static void init() {
-        BAD_TRACE_ID_MAP = new HashMap<>();
+        for (int i = 0; i < BATCH_COUNT; i++) {
+            TRACEID_BATCH_LIST.add(new TraceIdBatch());
+        }
     }
 
+
     @RequestMapping("/setWrongTraceId")
-    public String setWrongTraceId(@RequestParam String traceIdListJson, @RequestParam Integer batchId, @RequestParam Integer port) {
+    public String setWrongTraceId(@RequestParam String traceIdListJson, @RequestParam int batchPos) {
+        int pos = batchPos % BATCH_COUNT;
         List<String> traceIdList = JSON.parseObject(traceIdListJson, new TypeReference<List<String>>() {
         });
-
-        if (traceIdList == null || !(traceIdList.size() > 0)) {
-            return "nothing to set.";
+        LOGGER.info(String.format("setWrongTraceId had called, batchPos:%d, traceIdList:%s", batchPos, traceIdListJson));
+        TraceIdBatch traceIdBatch = TRACEID_BATCH_LIST.get(pos);
+        if (traceIdBatch.getBatchPos() != 0 && traceIdBatch.getBatchPos() != batchPos) {
+            LOGGER.warn("overwrite traceId batch when call setWrongTraceId");
         }
 
-        LOGGER.info(String.format("setWrongTraceId had been called, batchId:%d, port:%s, traceIdList:%s", batchId, port, traceIdListJson));
-
-        TraceIdBatch traceIdBatch = BAD_TRACE_ID_MAP.get(batchId);
-        if (traceIdBatch == null) {
-            traceIdBatch = new TraceIdBatch();
+        if (traceIdList != null && traceIdList.size() > 0) {
+            traceIdBatch.setBatchPos(batchPos);
+            traceIdBatch.setProcessCount(traceIdBatch.getProcessCount() + 1);
+            traceIdBatch.getTraceIdList().addAll(traceIdList);
         }
-        traceIdBatch.getPorts().add(port);
-        traceIdBatch.getTraceIdList().addAll(traceIdList);
-
-        BAD_TRACE_ID_MAP.put(batchId, traceIdBatch);
         return "suc";
     }
 
-    @RequestMapping("/notifyToGetData")
-    public String notifyToGetData(@RequestParam Integer batchId) {
-        TraceIdBatch traceIdBatch = BAD_TRACE_ID_MAP.get(batchId);
+    @RequestMapping("/sendWrongTracing")
+    public String setWrongTraceId(@RequestParam String wrongTraceMap, @RequestParam String bathPos) {
 
-        if (traceIdBatch == null || !traceIdBatch.isReady()) {
-            LOGGER.info(String.format("batch id: %s is not yet read to get data.", batchId));
-            return "not ready.";
+        Map<String, List<String>> processMap = JSON.parseObject(wrongTraceMap,
+                new TypeReference<Map<String, List<String>>>() {
+                });
+
+        List<Map<String, List<String>>> values = CheckSumService.TRACE_CHECKSUM_MAP_RAW.get(bathPos);
+        if (values == null) {
+            values = new ArrayList<>(2);
+            CheckSumService.TRACE_CHECKSUM_MAP_RAW.put(bathPos, values);
         }
 
-        handleWrongTrace(batchId, traceIdBatch);
-
+        if (processMap != null) {
+            values.add(processMap);
+        } else {
+            values.add(new HashMap<>(1));
+        }
         return "suc";
     }
 
     @RequestMapping("/finish")
     public String finish() {
         FINISH_PROCESS_COUNT++;
-
-        LOGGER.info("receive call 'finish', count:" + FINISH_PROCESS_COUNT);
-
-        if (FINISH_PROCESS_COUNT == Constants.CLIENT_DATA_PORTS.length) {
-
-            for (Integer batchId : BAD_TRACE_ID_MAP.keySet()) {
-                //handle the rest of trace id in the map.
-                handleWrongTrace(batchId, BAD_TRACE_ID_MAP.get(batchId));
-            }
-        }
-
-        sendCheckSum();
+        LOGGER.warn("receive call 'finish', count:" + FINISH_PROCESS_COUNT);
         return "suc";
     }
 
-    private void handleWrongTrace(Integer batchId, TraceIdBatch traceIdBatch) {
-        Map<String, Set<String>> map = new HashMap<>();
-        for (String port : Constants.CLIENT_DATA_PORTS) {
-            Map<String, List<String>> processMap = getWrongTrace(JSON.toJSONString(traceIdBatch.getTraceIdList()), port, batchId);
-            if (processMap != null) {
-                for (Map.Entry<String, List<String>> entry : processMap.entrySet()) {
-                    String traceId = entry.getKey();
-                    Set<String> spanSet = map.get(traceId);
-                    if (spanSet == null) {
-                        spanSet = new HashSet<>();
-                        map.put(traceId, spanSet);
-                    }
-                    spanSet.addAll(entry.getValue());
-                }
+    /**
+     * trace batch will be finished, when client process has finished.(FINISH_PROCESS_COUNT == PROCESS_COUNT)
+     *
+     * @return
+     */
+    public static boolean isFinished() {
+        for (int i = 0; i < BATCH_COUNT; i++) {
+            TraceIdBatch currentBatch = TRACEID_BATCH_LIST.get(i);
+            if (currentBatch.getBatchPos() != 0) {
+                return false;
             }
         }
-        LOGGER.info("getWrong batchId:" + batchId + ", traceIdsize:" + traceIdBatch.getTraceIdList().size() + ",result:" + map.size());
-
-        BAD_TRACE_ID_MAP.remove(batchId);
-
-        for (Map.Entry<String, Set<String>> entry : map.entrySet()) {
-            String traceId = entry.getKey();
-            Set<String> spanSet = entry.getValue();
-            // order span with startTime
-            String spans = spanSet.stream().sorted(
-                    Comparator.comparing(BackendController::getStartTime)).collect(Collectors.joining("\n"));
-            spans = spans + "\n";
-            // output all span to check
-            // LOGGER.info("traceId:" + traceId + ",value:\n" + spans);
-            TRACE_CHECKSUM_MAP.put(traceId, Utils.MD5(spans));
-        }
-
-    }
-
-    private Map<String, List<String>> getWrongTrace(@RequestParam String traceIdList, String port, int batchId) {
-        try {
-            RequestBody body = new FormBody.Builder()
-                    .add("traceIdList", traceIdList).add("batchPos", batchId + "").build();
-            String url = String.format("http://localhost:%s/getWrongTrace", port);
-            Request request = new Request.Builder().url(url).post(body).build();
-            Response response = Utils.callHttp(request);
-            Map<String, List<String>> resultMap = JSON.parseObject(response.body().string(),
-                    new TypeReference<Map<String, List<String>>>() {
-                    });
-            response.close();
-            return resultMap;
-        } catch (Exception e) {
-            LOGGER.warn(String.format("fail to getWrongTrace, batchId: %s, port: %s, json: %s", batchId, port, traceIdList), e);
-        }
-        return null;
-    }
-
-    private boolean sendCheckSum() {
-        try {
-            String result = JSON.toJSONString(TRACE_CHECKSUM_MAP);
-            RequestBody body = new FormBody.Builder()
-                    .add("result", result).build();
-            String url = String.format("http://localhost:%s/api/finished", CommonController.getDataSourcePort());
-            Request request = new Request.Builder().url(url).post(body).build();
-            Response response = Utils.callHttp(request);
-            if (response.isSuccessful()) {
-                response.close();
-                LOGGER.warn("suc to sendCheckSum, result:" + result);
-                return true;
-            }
-            LOGGER.warn("fail to sendCheckSum:" + response.message());
-            response.close();
+        if (FINISH_PROCESS_COUNT < Constants.PROCESS_COUNT) {
             return false;
-        } catch (Exception e) {
-            LOGGER.warn("fail to call finish", e);
         }
-        return false;
+        return true;
     }
 
-    public static long getStartTime(String span) {
-        if (span != null) {
-            String[] cols = span.split("\\|");
-            if (cols.length > 8) {
-                return Utils.toLong(cols[1], -1);
-            }
+    /**
+     * get finished bath when current and next batch has all finished
+     *
+     * @return
+     */
+    public static TraceIdBatch getFinishedBatch() {
+
+        int next = CURRENT_BATCH + 1;
+        if (next >= BATCH_COUNT) {
+            next = 0;
         }
-        return -1;
+        TraceIdBatch nextBatch = TRACEID_BATCH_LIST.get(next);
+        TraceIdBatch currentBatch = TRACEID_BATCH_LIST.get(CURRENT_BATCH);
+        // when client process is finished, or then next trace batch is finished. to get checksum for wrong traces.
+        if ((FINISH_PROCESS_COUNT >= Constants.PROCESS_COUNT && currentBatch.getBatchPos() > 0) ||
+                (nextBatch.getProcessCount() >= PROCESS_COUNT && currentBatch.getProcessCount() >= PROCESS_COUNT)) {
+            // reset
+            TraceIdBatch newTraceIdBatch = new TraceIdBatch();
+            TRACEID_BATCH_LIST.set(CURRENT_BATCH, newTraceIdBatch);
+            CURRENT_BATCH = next;
+            return currentBatch;
+        }
+
+        return null;
     }
 
 }
