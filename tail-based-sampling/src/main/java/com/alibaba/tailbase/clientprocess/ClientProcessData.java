@@ -42,8 +42,6 @@ public class ClientProcessData implements Runnable {
     public static void start() {
         Thread t = new Thread(new ClientProcessData(), "ProcessDataThread");
         t.start();
-
-        ClientDataSender.start();
     }
 
     @Override

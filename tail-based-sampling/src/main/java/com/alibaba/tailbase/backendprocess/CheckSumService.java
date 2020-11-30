@@ -40,9 +40,9 @@ public class CheckSumService implements Runnable {
         while (true) {
             try {
                 traceIdBatch = BackendController.getFinishedBatch();
-                if (traceIdBatch == null) {
+                if (traceIdBatch == null && TRACE_CHECKSUM_MAP_RAW.isEmpty()) {
                     // send checksum when client process has all finished.
-                    if (BackendController.isFinished()) {
+                    if (BackendController.isFinished())  {
                         if (sendCheckSum()) {
                             break;
                         }
@@ -50,8 +50,10 @@ public class CheckSumService implements Runnable {
                     continue;
                 }
 
-                for (String port : ports) {
-                    setWrongTraceIdBatch(traceIdBatch, port);
+                if (traceIdBatch != null) {
+                    for (String port : ports) {
+                        setWrongTraceIdBatch(traceIdBatch, port);
+                    }
                 }
 
                 for (Map.Entry<String, List<Map<String, List<String>>>> entry : TRACE_CHECKSUM_MAP_RAW.entrySet()) {

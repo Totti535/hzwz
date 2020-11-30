@@ -26,6 +26,7 @@ public class CommonController {
     DATA_SOURCE_PORT = port;
     if (Utils.isClientProcess()) {
       ClientProcessData.start();
+      ClientDataSender.start();
     }
     return "suc";
   }
