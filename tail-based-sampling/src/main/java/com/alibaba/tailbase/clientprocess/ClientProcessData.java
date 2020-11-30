@@ -144,14 +144,6 @@ public class ClientProcessData implements Runnable {
         }
     }
 
-    public static String getWrongTracing(String wrongTraceIdList, int batchPos) {
-        LOGGER.info(String.format("getWrongTracing, batchPos:%d, wrongTraceIdList:\n %s",
-                batchPos, wrongTraceIdList));
-        List<String> traceIdList = JSON.parseObject(wrongTraceIdList, new TypeReference<List<String>>() {
-        });
-
-        return getWrongTracing(traceIdList, batchPos);
-    }
 
     public static String getWrongTracing(List<String> traceIdList, int batchPos) {
         Map<String, List<String>> wrongTraceMap = new HashMap<>();
@@ -173,23 +165,19 @@ public class ClientProcessData implements Runnable {
     }
 
     public static void sendWrongTracing(List<String> traceIdList, int batchPos) {
-        Map<String, List<String>> wrongTraceMap = new HashMap<>();
-        int pos = batchPos % BATCH_COUNT;
-        int previous = pos - 1;
-        if (previous == -1) {
-            previous = BATCH_COUNT - 1;
-        }
-        int next = pos + 1;
-        if (next == BATCH_COUNT) {
-            next = 0;
-        }
-        getWrongTraceWithBatch(previous, pos, traceIdList, wrongTraceMap);
-        getWrongTraceWithBatch(pos, pos, traceIdList, wrongTraceMap);
-        getWrongTraceWithBatch(next, pos, traceIdList, wrongTraceMap);
-        // to clear spans, don't block client process thread. TODO to use lock/notify
-        BATCH_TRACE_LIST.get(previous).clear();
+        String json = getWrongTracing(traceIdList, batchPos);
+        try {
+            LOGGER.info("send wrong trace map, batchPos: " + batchPos);
 
-        LOGGER.info("wrong trace sent. batchPos: " + batchPos);
+            RequestBody body = new FormBody.Builder()
+                    .add("wrongTraceMap", json).build();
+
+            Request request = new Request.Builder().url("http://localhost:8002/sendWrongTracing").post(body).build();
+            Response response = Utils.callHttp(request);
+            response.close();
+        } catch (Exception e) {
+            LOGGER.warn("fail to send wrong trace map, batchPos: " + batchPos);
+        }
     }
 
     private static void getWrongTraceWithBatch(int batchPos, int pos, List<String> traceIdList, Map<String, List<String>> wrongTraceMap) {

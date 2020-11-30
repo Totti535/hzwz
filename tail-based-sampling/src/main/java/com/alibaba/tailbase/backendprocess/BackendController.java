@@ -26,8 +26,9 @@ public class BackendController {
 
     // save 90 batch for wrong trace
     private static int BATCH_COUNT = 90;
-    private static List<TraceIdBatch> TRACEID_BATCH_LIST= new ArrayList<>();
-    public static  void init() {
+    private static List<TraceIdBatch> TRACEID_BATCH_LIST = new ArrayList<>();
+
+    public static void init() {
         for (int i = 0; i < BATCH_COUNT; i++) {
             TRACEID_BATCH_LIST.add(new TraceIdBatch());
         }
@@ -53,6 +54,29 @@ public class BackendController {
         return "suc";
     }
 
+    @RequestMapping("/sendWrongTracing")
+    public String setWrongTraceId(@RequestParam String wrongTraceMap) {
+
+        Map<String, List<String>> processMap = JSON.parseObject(wrongTraceMap,
+                new TypeReference<Map<String, List<String>>>() {
+                });
+
+        if (processMap != null) {
+            for (Map.Entry<String, List<String>> entry : processMap.entrySet()) {
+                String traceId = entry.getKey();
+                List<List<String>> spanSet = CheckSumService.TRACE_CHECKSUM_MAP_RAW.get(traceId);
+
+                if (spanSet == null) {
+                    spanSet = new ArrayList<>(2);
+                    CheckSumService.TRACE_CHECKSUM_MAP_RAW.put(traceId, spanSet);
+                }
+                spanSet.add(entry.getValue());
+            }
+        }
+
+        return "suc";
+    }
+
     @RequestMapping("/finish")
     public String finish() {
         FINISH_PROCESS_COUNT++;
@@ -62,23 +86,25 @@ public class BackendController {
 
     /**
      * trace batch will be finished, when client process has finished.(FINISH_PROCESS_COUNT == PROCESS_COUNT)
+     *
      * @return
      */
-   public static boolean isFinished() {
-       for (int i = 0; i < BATCH_COUNT; i++) {
-           TraceIdBatch currentBatch = TRACEID_BATCH_LIST.get(i);
-           if (currentBatch.getBatchPos() != 0) {
-               return false;
-           }
-       }
-       if (FINISH_PROCESS_COUNT < Constants.PROCESS_COUNT) {
-           return false;
-       }
-       return true;
-   }
+    public static boolean isFinished() {
+        for (int i = 0; i < BATCH_COUNT; i++) {
+            TraceIdBatch currentBatch = TRACEID_BATCH_LIST.get(i);
+            if (currentBatch.getBatchPos() != 0) {
+                return false;
+            }
+        }
+        if (FINISH_PROCESS_COUNT < Constants.PROCESS_COUNT) {
+            return false;
+        }
+        return true;
+    }
 
     /**
      * get finished bath when current and next batch has all finished
+     *
      * @return
      */
     public static TraceIdBatch getFinishedBatch() {

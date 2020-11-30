@@ -19,13 +19,6 @@ public class ClientController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ClientProcessData.class.getName());
 
-    @RequestMapping("/getWrongTrace")
-    public String getWrongTrace(@RequestParam String traceIdList, @RequestParam Integer batchPos) {
-        String json = ClientProcessData.getWrongTracing(traceIdList, batchPos);
-        LOGGER.info("suc to getWrongTrace, batchPos:" + batchPos);
-        return json;
-    }
-
 
     @RequestMapping("/setWrongTraceIdBatch")
     public String setWrongTraceId(@RequestParam String batch) {
