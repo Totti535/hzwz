@@ -84,8 +84,8 @@ public class ClientProcessData implements Runnable {
 
                     synchronized (lock) {
                         while (traceMap.size() > 0) {
-                            LOGGER.info(String.format("waiting backend to consume data. pos: %s, map size: %s", pos, traceMap.size()));
                             lock.wait();
+                            LOGGER.info(String.format("waiting backend to consume data. pos: %s, map size: %s", pos, traceMap.size()));
                         }
                     }
                     // batchPos begin from 0, so need to minus 1
