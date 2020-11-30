@@ -167,8 +167,6 @@ public class ClientProcessData implements Runnable {
     public static void sendWrongTracing(List<String> traceIdList, int batchPos) {
         String json = getWrongTracing(traceIdList, batchPos);
         try {
-            LOGGER.info("send wrong trace map, batchPos: " + batchPos);
-
             RequestBody body = new FormBody.Builder()
                     .add("wrongTraceMap", json)
                     .add("bathPos", batchPos + "").build();
@@ -176,6 +174,7 @@ public class ClientProcessData implements Runnable {
             Request request = new Request.Builder().url("http://localhost:8002/sendWrongTracing").post(body).build();
             Response response = Utils.callHttp(request);
             response.close();
+            LOGGER.info("send wrong trace map, batchPos: " + batchPos);
         } catch (Exception e) {
             LOGGER.warn("fail to send wrong trace map, batchPos: " + batchPos);
         }
@@ -196,8 +195,7 @@ public class ClientProcessData implements Runnable {
                 }
                 // output spanlist to check
                 String spanListString = spanList.stream().collect(Collectors.joining("\n"));
-                LOGGER.info(String.format("getWrongTracing, batchPos:%d, pos:%d, traceId:%s, spanList:\n %s",
-                        batchPos, pos, traceId, spanListString));
+                //LOGGER.info(String.format("getWrongTracing, batchPos:%d, pos:%d, traceId:%s, spanList:\n %s", batchPos, pos, traceId, spanListString));
             }
         }
     }

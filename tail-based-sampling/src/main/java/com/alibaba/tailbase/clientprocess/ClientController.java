@@ -24,7 +24,9 @@ public class ClientController {
     public String setWrongTraceId(@RequestParam String batch) {
         TraceIdBatch traceIdBatch = JSON.parseObject(batch, new TypeReference<TraceIdBatch>() {
         });
-        batchQueue.offer(traceIdBatch);
+        if (traceIdBatch != null) {
+            batchQueue.offer(traceIdBatch);
+        }
         return "suc";
     }
 }
