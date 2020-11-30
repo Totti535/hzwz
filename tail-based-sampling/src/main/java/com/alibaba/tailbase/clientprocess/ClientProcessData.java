@@ -18,6 +18,7 @@ import java.net.URL;
 import java.util.*;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.stream.Collectors;
 
@@ -26,7 +27,7 @@ public class ClientProcessData implements Runnable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ClientProcessData.class.getName());
 
-    public static Queue<TraceIdBatch> batchQueue = new LinkedBlockingQueue<>();
+    public static Queue<TraceIdBatch> batchQueue = new ConcurrentLinkedQueue<>();
 
     // an list of trace map,like ring buffe.  key is traceId, value is spans ,  r
     private static List<Map<String, List<String>>> BATCH_TRACE_LIST = new ArrayList<>();

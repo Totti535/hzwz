@@ -11,7 +11,6 @@ public class Utils {
     private final static OkHttpClient OK_HTTP_CLIENT = new OkHttpClient.Builder()
             .connectTimeout(600L, TimeUnit.SECONDS)
             .readTimeout(600L, TimeUnit.SECONDS)
-            .writeTimeout(600L, TimeUnit.SECONDS)
             .build();
 
     public static Response callHttp(Request request) throws IOException {
