@@ -33,7 +33,7 @@ public class CheckSumService implements Runnable{
     @Override
     public void run() {
         TraceIdBatch traceIdBatch = null;
-        String[] ports = new String[]{CLIENT_PROCESS_PORT1, CLIENT_PROCESS_PORT2};
+        String[] ports = new String[]{CLIENT_PROCESS_PORT1};
         while (true) {
             try {
                 traceIdBatch = BackendController.getFinishedBatch();
@@ -46,6 +46,12 @@ public class CheckSumService implements Runnable{
                     }
                     continue;
                 }
+
+                for (String port : ports) {
+                    setWrongTraceIdBatch(traceIdBatch, port);
+                }
+
+                /*
                 Map<String, Set<String>> map = new HashMap<>();
                // if (traceIdBatch.getTraceIdList().size() > 0) {
                     int batchPos = traceIdBatch.getBatchPos();
@@ -79,6 +85,9 @@ public class CheckSumService implements Runnable{
                    // LOGGER.info("traceId:" + traceId + ",value:\n" + spans);
                     TRACE_CHUCKSUM_MAP.put(traceId, Utils.MD5(spans));
                 }
+
+
+                 */
             } catch (Exception e) {
                 // record batchPos when an exception  occurs.
                 int batchPos = 0;
@@ -120,6 +129,23 @@ public class CheckSumService implements Runnable{
             LOGGER.warn("fail to getWrongTrace, json:" + traceIdList + ",batchPos:" + batchPos, e);
         }
         return null;
+    }
+
+
+    private void setWrongTraceIdBatch(TraceIdBatch traceIdBatch, String port) {
+        String json = JSON.toJSONString(traceIdBatch);
+            try {
+                LOGGER.info("send wrong trace id batch, json:" + json);
+                RequestBody body = new FormBody.Builder()
+                        .add("batch", json).build();
+
+                String url = String.format("http://localhost:%s/setWrongTraceIdBatch", port);
+                Request request = new Request.Builder().url(url).post(body).build();
+                Response response = Utils.callHttp(request);
+                response.close();
+            } catch (Exception e) {
+                LOGGER.warn("fail to send wrong trace id batch");
+            }
     }
 
 

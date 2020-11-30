@@ -1,5 +1,6 @@
 package com.alibaba.tailbase;
 
+import com.alibaba.tailbase.clientprocess.ClientDataSender;
 import com.alibaba.tailbase.clientprocess.ClientProcessData;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -25,6 +26,7 @@ public class CommonController {
     DATA_SOURCE_PORT = port;
     if (Utils.isClientProcess()) {
       ClientProcessData.start();
+      ClientDataSender.start();
     }
     return "suc";
   }

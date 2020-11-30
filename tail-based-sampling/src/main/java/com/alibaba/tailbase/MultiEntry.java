@@ -2,6 +2,7 @@ package com.alibaba.tailbase;
 
 import com.alibaba.tailbase.backendprocess.BackendController;
 import com.alibaba.tailbase.backendprocess.CheckSumService;
+import com.alibaba.tailbase.clientprocess.ClientDataSender;
 import com.alibaba.tailbase.clientprocess.ClientProcessData;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;

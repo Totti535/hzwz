@@ -60,6 +60,16 @@ public class BackendController {
         return "suc";
     }
 
+    @RequestMapping("/getWrongTraceBatch")
+    public String getWrongTraceBatch() {
+        TraceIdBatch traceIdBatch = getFinishedBatch();
+        String json = JSON.toJSONString(traceIdBatch);
+        LOGGER.info("suc to get wrong id list.");
+        return json;
+    }
+
+
+
     /**
      * trace batch will be finished, when client process has finished.(FINISH_PROCESS_COUNT == PROCESS_COUNT)
      * @return
