@@ -170,7 +170,8 @@ public class ClientProcessData implements Runnable {
             LOGGER.info("send wrong trace map, batchPos: " + batchPos);
 
             RequestBody body = new FormBody.Builder()
-                    .add("wrongTraceMap", json).build();
+                    .add("wrongTraceMap", json)
+                    .add("bathPos", batchPos + "").build();
 
             Request request = new Request.Builder().url("http://localhost:8002/sendWrongTracing").post(body).build();
             Response response = Utils.callHttp(request);

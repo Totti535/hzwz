@@ -26,7 +26,7 @@ public class CheckSumService implements Runnable {
     // save chuckSum for the total wrong trace
     private static Map<String, String> TRACE_CHECKSUM_MAP = new ConcurrentHashMap<>();
 
-    public static Map<String, List<List<String>>> TRACE_CHECKSUM_MAP_RAW = new ConcurrentHashMap<>();
+    public static Map<String, List<Map<String, List<String>>>> TRACE_CHECKSUM_MAP_RAW = new ConcurrentHashMap<>();
 
     public static void start() {
         Thread t = new Thread(new CheckSumService(), "CheckSumServiceThread");
@@ -54,21 +54,35 @@ public class CheckSumService implements Runnable {
                     setWrongTraceIdBatch(traceIdBatch, port);
                 }
 
-                for (Map.Entry<String, List<List<String>>> entry : TRACE_CHECKSUM_MAP_RAW.entrySet()) {
-                    String traceId = entry.getKey();
-                    List<List<String>> spanList = entry.getValue();
+                for (Map.Entry<String, List<Map<String, List<String>>>> entry : TRACE_CHECKSUM_MAP_RAW.entrySet()) {
 
-                    if (spanList.size() >= Constants.PROCESS_COUNT) {
-                        Set<String> spanSet = new HashSet<>();
-                        for (List<String> list : spanList) {
-                            spanSet.addAll(list);
+                    List<Map<String, List<String>>> traceMapList = entry.getValue();
+
+                    if (traceMapList.size() >= Constants.PROCESS_COUNT) {
+
+                        Map<String, Set<String>> resultMap = new HashMap<>();
+                        for (Map<String, List<String>> traceMap : traceMapList) {
+                            for (Map.Entry<String, List<String>> traceEntry : traceMap.entrySet()) {
+                                if (resultMap.containsKey(traceEntry.getKey())) {
+                                    resultMap.get(traceEntry.getKey()).addAll(traceEntry.getValue());
+                                } else {
+                                    Set spanSet = new HashSet();
+                                    spanSet.addAll(traceEntry.getValue());
+                                    resultMap.put(traceEntry.getKey(), spanSet);
+                                }
+                            }
                         }
-                        // order span with startTime
-                        String spans = spanSet.stream().sorted(
-                                Comparator.comparing(CheckSumService::getStartTime)).collect(Collectors.joining("\n"));
-                        spans = spans + "\n";
 
-                        TRACE_CHECKSUM_MAP.put(traceId, Utils.MD5(spans));
+                        for (Map.Entry<String, Set<String>> resEntry : resultMap.entrySet()) {
+
+                            Set<String> spanSet = resEntry.getValue();
+                            // order span with startTime
+                            String spans = spanSet.stream().sorted(
+                                    Comparator.comparing(CheckSumService::getStartTime)).collect(Collectors.joining("\n"));
+                            spans = spans + "\n";
+
+                            TRACE_CHECKSUM_MAP.put(resEntry.getKey(), Utils.MD5(spans));
+                        }
                         TRACE_CHECKSUM_MAP_RAW.remove(entry.getKey());
                     }
                 }
@@ -91,7 +105,6 @@ public class CheckSumService implements Runnable {
             }
         }
     }
-
 
     private void setWrongTraceIdBatch(TraceIdBatch traceIdBatch, String port) {
         String json = JSON.toJSONString(traceIdBatch);

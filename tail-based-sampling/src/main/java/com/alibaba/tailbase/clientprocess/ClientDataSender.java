@@ -13,11 +13,16 @@ public class ClientDataSender implements Runnable {
     public void run() {
 
         while (true) {
-            if (!ClientProcessData.batchQueue.isEmpty()) {
-                TraceIdBatch traceIdBatch = ClientProcessData.batchQueue.poll();
-                if (traceIdBatch != null) {
-                    ClientProcessData.sendWrongTracing(traceIdBatch.getTraceIdList(), traceIdBatch.getBatchPos());
+
+            try {
+                if (!ClientProcessData.batchQueue.isEmpty()) {
+                    TraceIdBatch traceIdBatch = ClientProcessData.batchQueue.poll();
+                    if (traceIdBatch != null) {
+                        ClientProcessData.sendWrongTracing(traceIdBatch.getTraceIdList(), traceIdBatch.getBatchPos());
+                    }
                 }
+            }catch (Exception ex) {
+
             }
         }
     }

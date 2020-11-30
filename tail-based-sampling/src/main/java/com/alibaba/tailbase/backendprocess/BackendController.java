@@ -55,25 +55,23 @@ public class BackendController {
     }
 
     @RequestMapping("/sendWrongTracing")
-    public String setWrongTraceId(@RequestParam String wrongTraceMap) {
+    public String setWrongTraceId(@RequestParam String wrongTraceMap, @RequestParam String bathPos) {
 
         Map<String, List<String>> processMap = JSON.parseObject(wrongTraceMap,
                 new TypeReference<Map<String, List<String>>>() {
                 });
 
-        if (processMap != null) {
-            for (Map.Entry<String, List<String>> entry : processMap.entrySet()) {
-                String traceId = entry.getKey();
-                List<List<String>> spanSet = CheckSumService.TRACE_CHECKSUM_MAP_RAW.get(traceId);
-
-                if (spanSet == null) {
-                    spanSet = new ArrayList<>(2);
-                    CheckSumService.TRACE_CHECKSUM_MAP_RAW.put(traceId, spanSet);
-                }
-                spanSet.add(entry.getValue());
-            }
+        List<Map<String, List<String>>> values = CheckSumService.TRACE_CHECKSUM_MAP_RAW.get(bathPos);
+        if (values == null) {
+            values = new ArrayList<>(2);
+            CheckSumService.TRACE_CHECKSUM_MAP_RAW.put(bathPos, values);
         }
 
+        if (processMap != null) {
+            values.add(processMap);
+        } else {
+            values.add(new HashMap<>(1));
+        }
         return "suc";
     }
 
