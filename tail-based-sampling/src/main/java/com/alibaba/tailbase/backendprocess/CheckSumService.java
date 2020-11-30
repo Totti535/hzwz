@@ -33,7 +33,7 @@ public class CheckSumService implements Runnable{
     @Override
     public void run() {
         TraceIdBatch traceIdBatch = null;
-        String[] ports = new String[]{CLIENT_PROCESS_PORT1};
+        String[] ports = new String[]{CLIENT_PROCESS_PORT1, CLIENT_PROCESS_PORT2};
         while (true) {
             try {
                 traceIdBatch = BackendController.getFinishedBatch();

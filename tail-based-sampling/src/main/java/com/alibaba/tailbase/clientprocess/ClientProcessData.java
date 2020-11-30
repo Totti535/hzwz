@@ -16,7 +16,9 @@ import java.net.HttpURLConnection;
 import java.net.Proxy;
 import java.net.URL;
 import java.util.*;
+import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.stream.Collectors;
 
 
@@ -24,7 +26,7 @@ public class ClientProcessData implements Runnable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ClientProcessData.class.getName());
 
-    public static Queue<TraceIdBatch> batchQueue = new LinkedList<>();
+    public static Queue<TraceIdBatch> batchQueue = new LinkedBlockingQueue<>();
 
     // an list of trace map,like ring buffe.  key is traceId, value is spans ,  r
     private static List<Map<String, List<String>>> BATCH_TRACE_LIST = new ArrayList<>();
@@ -40,6 +42,8 @@ public class ClientProcessData implements Runnable {
     public static void start() {
         Thread t = new Thread(new ClientProcessData(), "ProcessDataThread");
         t.start();
+
+        ClientDataSender.start();
     }
 
     @Override
@@ -126,22 +130,6 @@ public class ClientProcessData implements Runnable {
                 LOGGER.warn("fail to updateBadTraceId, json:" + json + ", batch:" + batchPos);
             }
         }
-    }
-
-    private TraceIdBatch getWrongTraceBatch() {
-        try {
-            RequestBody body = new FormBody.Builder().build();
-            Request request = new Request.Builder().url("http://localhost:8002/getWrongTraceBatch").post(body).build();
-            Response response = Utils.callHttp(request);
-            TraceIdBatch traceIdBatch = JSON.parseObject(response.body().string(),
-                    new TypeReference<TraceIdBatch>() {
-                    });
-            response.close();
-            return traceIdBatch;
-        } catch (Exception e) {
-            LOGGER.warn("fail to get trace id batch.");
-        }
-        return null;
     }
 
 
