@@ -2,23 +2,32 @@ package com.alibaba.tailbase.backendprocess;
 
 import com.alibaba.tailbase.Constants;
 
-import java.util.*;
-
+import java.util.ArrayList;
+import java.util.List;
 
 public class TraceIdBatch {
-    private Set<Integer> ports = new HashSet<>(Constants.PROCESS_COUNT);
-    private List<String> traceIdList = new ArrayList<>(Constants.BATCH_SIZE / 100);
+    private int batchPos = 0;
+    private int processCount = 0;
+    private List<String> traceIdList = new ArrayList<>(Constants.BATCH_SIZE / 10);
+
+    public int getBatchPos() {
+        return batchPos;
+    }
+
+    public void setBatchPos(int batchPos) {
+        this.batchPos = batchPos;
+    }
+
+    public int getProcessCount() {
+        return processCount;
+    }
+
+    public void setProcessCount(int processCount) {
+        this.processCount = processCount;
+    }
 
     public List<String> getTraceIdList() {
         return traceIdList;
-    }
-
-    public Set<Integer> getPorts() {
-        return this.ports;
-    }
-
-    public boolean isReady() {
-       return this.ports.size() == Constants.CLIENT_DATA_PORTS.length;
     }
 
 }

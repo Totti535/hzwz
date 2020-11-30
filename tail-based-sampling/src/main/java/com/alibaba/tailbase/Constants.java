@@ -9,6 +9,4 @@ public class Constants {
     public static final String BACKEND_PROCESS_PORT3 = "8004";
     public static int BATCH_SIZE = 20000;
     public static int PROCESS_COUNT = 2;
-
-    public static String[] CLIENT_DATA_PORTS = new String[]{CLIENT_PROCESS_PORT1, CLIENT_PROCESS_PORT2};
 }
