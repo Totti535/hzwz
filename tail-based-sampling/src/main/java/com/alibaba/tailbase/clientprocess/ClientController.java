@@ -10,11 +10,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class ClientController {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ClientProcessData.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(ClientController.class.getName());
 
     @RequestMapping("/getWrongTrace")
     public String getWrongTrace(@RequestParam String traceIdList, @RequestParam Integer batchPos) {
-        String json = ClientProcessData.getWrongTracing(traceIdList, batchPos);
+        String json = ClientDataHandler.getWrongTracing(traceIdList, batchPos);
         LOGGER.info("suc to getWrongTrace, batchPos:" + batchPos);
         return json;
     }
