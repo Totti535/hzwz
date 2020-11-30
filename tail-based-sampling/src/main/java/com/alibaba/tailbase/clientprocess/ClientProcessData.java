@@ -10,7 +10,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.Proxy;
 import java.net.URL;
@@ -22,8 +24,6 @@ import java.util.stream.Collectors;
 public class ClientProcessData implements Runnable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ClientProcessData.class.getName());
-
-    private static final Object lock = new Object();
 
     // an list of trace map,like ring buffe.  key is traceId, value is spans ,  r
     private static List<Map<String,List<String>>> BATCH_TRACE_LIST = new ArrayList<>();
@@ -43,7 +43,16 @@ public class ClientProcessData implements Runnable {
     @Override
     public void run() {
         try {
-            InputStream input = getSourceDataInputStream();
+            String path = getPath();
+            // process data on client, not server
+            if (StringUtils.isEmpty(path)) {
+                LOGGER.warn("path is empty");
+                return;
+            }
+            URL url = new URL(path);
+            LOGGER.info("data path:" + path);
+            HttpURLConnection httpConnection = (HttpURLConnection) url.openConnection(Proxy.NO_PROXY);
+            InputStream input = httpConnection.getInputStream();
             BufferedReader bf = new BufferedReader(new InputStreamReader(input));
             String line;
             long count = 0;
@@ -81,11 +90,12 @@ public class ClientProcessData implements Runnable {
                     traceMap = BATCH_TRACE_LIST.get(pos);
                     // donot produce data, wait backend to consume data
                     // TODO to use lock/notify
-
-                    synchronized (lock) {
-                        while (traceMap.size() > 0) {
-                            lock.wait();
-                            LOGGER.info(String.format("waiting backend to consume data. pos: %s, map size: %s", pos, traceMap.size()));
+                    if (traceMap.size() > 0) {
+                        while (true) {
+                            Thread.sleep(10);
+                            if (traceMap.size() == 0) {
+                                break;
+                            }
                         }
                     }
                     // batchPos begin from 0, so need to minus 1
@@ -155,10 +165,7 @@ public class ClientProcessData implements Runnable {
         getWrongTraceWithBatch(pos, pos, traceIdList,  wrongTraceMap);
         getWrongTraceWithBatch(next, pos, traceIdList, wrongTraceMap);
         // to clear spans, don't block client process thread. TODO to use lock/notify
-        synchronized (lock) {
-            BATCH_TRACE_LIST.get(previous).clear();
-            lock.notify();
-        }
+        BATCH_TRACE_LIST.get(previous).clear();
         return JSON.toJSONString(wrongTraceMap);
     }
 
@@ -192,39 +199,6 @@ public class ClientProcessData implements Runnable {
         } else {
             return null;
         }
-    }
-
-    private boolean isDev() {
-        return Boolean.valueOf(System.getProperty("is.dev", "false"));
-    }
-
-    private InputStream getSourceDataInputStream() throws IOException {
-        InputStream input = null;
-        if (isDev()) {
-            if ("8000".equals(System.getProperty("server.port", "8000"))) {
-                File file = new File("C:\\Users\\55733\\Desktop\\doc\\demo_data\\trace1.data");
-                input = new FileInputStream(file);
-            }
-
-            if ("8001".equals(System.getProperty("server.port", "8000"))) {
-                File file = new File("C:\\Users\\55733\\Desktop\\doc\\demo_data\\trace2.data");
-                input = new FileInputStream(file);
-            }
-
-        } else {
-            String path = getPath();
-            // process data on client, not server
-            if (StringUtils.isEmpty(path)) {
-                LOGGER.warn("path is empty");
-                throw new IOException("path is empty");
-            }
-
-            URL url = new URL(path);
-            LOGGER.info("data path:" + path);
-            HttpURLConnection httpConnection = (HttpURLConnection) url.openConnection(Proxy.NO_PROXY);
-            input = httpConnection.getInputStream();
-        }
-        return input;
     }
 
 }
