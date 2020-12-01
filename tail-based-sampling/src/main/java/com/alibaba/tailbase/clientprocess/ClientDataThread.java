@@ -11,10 +11,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
-import java.io.InputStream;
 import java.util.*;
 
-import static com.alibaba.tailbase.clientprocess.ClientProcessData.batchProcessMap;
+import static com.alibaba.tailbase.clientprocess.ClientProcessData.isDev;
+
 
 public class ClientDataThread extends Thread {
 
@@ -24,8 +24,11 @@ public class ClientDataThread extends Thread {
 
     private BufferedReader bf;
 
-    public ClientDataThread(BufferedReader bf) {
+    private long partSize;
+
+    public ClientDataThread(BufferedReader bf, long partSize) {
         this.bf = bf;
+        this.partSize = partSize;
     }
 
     @Override
@@ -34,12 +37,15 @@ public class ClientDataThread extends Thread {
         int pos = 0;
         long count = 0;
         Set<String> badTraceIdList = new HashSet<>(1000);
-        try {
-            while ((line = bf.readLine()) != null) {
-                Map<String, List<String>> traceMap = ClientProcessData.BATCH_TRACE_LIST.get(pos);
 
+        long byteRead = 0;
+        try {
+            while ((line = bf.readLine()) != null && byteRead <= partSize) {
+
+                byteRead += line.getBytes().length;
                 count++;
 
+                Map<String, List<String>> traceMap = ClientProcessData.BATCH_TRACE_LIST.get(pos);
                 String[] cols = line.split("\\|");
                 if (cols != null && cols.length > 1) {
                     String traceId = cols[0];

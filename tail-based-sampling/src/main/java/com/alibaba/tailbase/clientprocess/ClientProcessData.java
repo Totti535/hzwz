@@ -19,7 +19,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static com.alibaba.tailbase.Constants.NUMBER_OF_THREAD;
@@ -30,9 +29,11 @@ public class ClientProcessData implements Runnable {
     private static final Logger LOGGER = LoggerFactory.getLogger(ClientProcessData.class.getName());
 
     // an list of trace map,like ring buffe.  key is traceId, value is spans ,  r
-    public static Vector<Map<String,List<String>>> BATCH_TRACE_LIST = new Vector<>();
+    public static List<Map<String,List<String>>> BATCH_TRACE_LIST = new ArrayList<>();
     // make 50 bucket to cache traceData
     public static int BATCH_COUNT = 15;
+
+    private static int OVERLAP_BUFFER = 500;
 
     public static Map<Integer, Integer> batchProcessMap = new ConcurrentHashMap<>();
 
@@ -59,7 +60,7 @@ public class ClientProcessData implements Runnable {
 
             for (int i = 0; i < NUMBER_OF_THREAD; i++) {
                 long start = partSize * i;
-                long end = start + partSize + 500;
+                long end = start + partSize + OVERLAP_BUFFER;
 
                 boolean isLast = false;
                 if (i == NUMBER_OF_THREAD - 1) {
@@ -67,6 +68,10 @@ public class ClientProcessData implements Runnable {
                 }
 
                 InputStream input = getSourceDataInputStream(start, end, isLast);
+                if (isDev()) {
+                    input.skip(start);
+                }
+
                 inputStreams.add(input);
                 bufferedReaders.add(new BufferedReader(new InputStreamReader(input)));
             }
@@ -75,7 +80,7 @@ public class ClientProcessData implements Runnable {
             List<Future<?>> futures = new ArrayList<>();
 
             for (BufferedReader bf : bufferedReaders) {
-                Future<?> future = threadPool.submit(new ClientDataThread(bf));
+                Future<?> future = threadPool.submit(new ClientDataThread(bf, partSize + OVERLAP_BUFFER));
                 futures.add(future);
             }
 
@@ -165,7 +170,7 @@ public class ClientProcessData implements Runnable {
         }
     }
 
-    private boolean isDev() {
+    public static boolean isDev() {
         return Boolean.valueOf(System.getProperty("is.dev", "false"));
     }
 
@@ -223,9 +228,9 @@ public class ClientProcessData implements Runnable {
             LOGGER.info("data path:" + path);
             HttpURLConnection httpConnection = (HttpURLConnection) url.openConnection(Proxy.NO_PROXY);
             if (!isLast) {
-                httpConnection.setRequestProperty("Range", String.format("bytes=%s-%s"));
+                httpConnection.setRequestProperty("Range", String.format("bytes=%s-%s",start, end));
             } else {
-                httpConnection.setRequestProperty("Range", String.format("bytes=%s-"));
+                httpConnection.setRequestProperty("Range", String.format("bytes=%s-", start));
             }
             input = httpConnection.getInputStream();
         }
