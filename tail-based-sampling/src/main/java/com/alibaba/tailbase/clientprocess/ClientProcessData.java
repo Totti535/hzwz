@@ -33,6 +33,8 @@ public class ClientProcessData implements Runnable {
     // make 50 bucket to cache traceData
     private static int BATCH_COUNT = 15;
 
+    BackendServiceClient backendServiceClient = new BackendServiceClient("localhost", 8003);
+
     public static void init() {
         for (int i = 0; i < BATCH_COUNT; i++) {
             BATCH_TRACE_LIST.add(new ConcurrentHashMap<>(Constants.BATCH_SIZE));
@@ -118,6 +120,10 @@ public class ClientProcessData implements Runnable {
      */
     private void updateWrongTraceId(Set<String> badTraceIdList, int batchPos) {
         String json = JSON.toJSONString(badTraceIdList);
+
+        backendServiceClient.setWrongTraceId(json, batchPos);
+
+        /*
         if (badTraceIdList.size() > 0) {
             try {
                 LOGGER.info("updateBadTraceId, json:" + json + ", batch:" + batchPos);
@@ -130,6 +136,7 @@ public class ClientProcessData implements Runnable {
                 LOGGER.warn("fail to updateBadTraceId, json:" + json + ", batch:" + batchPos);
             }
         }
+        */
     }
 
 

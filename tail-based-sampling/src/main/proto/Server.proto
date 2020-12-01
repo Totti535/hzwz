@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.alibaba.tailbase.proto";
+option java_outer_classname = "ServerProto";
+option objc_class_prefix = "HLW";
+
+package server;
+
+service BackendService {
+  rpc setWrongTraceId (setWrongTraceIdRequest) returns (setWrongTraceIdReply) {}
+}
+
+message setWrongTraceIdRequest {
+  string traceIdListJson = 1;
+  int32 batchPos = 2;
+}
+
+message setWrongTraceIdReply {
+  string message = 1;
+}

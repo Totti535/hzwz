@@ -1,6 +1,7 @@
 package com.alibaba.tailbase;
 
 import com.alibaba.tailbase.backendprocess.BackendController;
+import com.alibaba.tailbase.backendprocess.BackendServer;
 import com.alibaba.tailbase.backendprocess.CheckSumService;
 import com.alibaba.tailbase.clientprocess.ClientDataSender;
 import com.alibaba.tailbase.clientprocess.ClientProcessData;
@@ -17,6 +18,12 @@ public class MultiEntry {
         if (Utils.isBackendProcess()) {
             BackendController.init();
             CheckSumService.start();
+
+            try {
+                BackendServer.launch();
+            }catch (Exception ex) {
+                System.out.println("fail to launch grpc.");
+            }
         }
         if (Utils.isClientProcess()) {
             ClientProcessData.init();

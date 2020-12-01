@@ -25,15 +25,14 @@ public class BackendController {
     private static volatile Integer CURRENT_BATCH = 0;
 
     // save 90 batch for wrong trace
-    private static int BATCH_COUNT = 90;
-    private static List<TraceIdBatch> TRACEID_BATCH_LIST = new ArrayList<>();
+    public static int BATCH_COUNT = 90;
+    public static List<TraceIdBatch> TRACEID_BATCH_LIST = new ArrayList<>();
 
     public static void init() {
         for (int i = 0; i < BATCH_COUNT; i++) {
             TRACEID_BATCH_LIST.add(new TraceIdBatch());
         }
     }
-
 
     @RequestMapping("/setWrongTraceId")
     public String setWrongTraceId(@RequestParam String traceIdListJson, @RequestParam int batchPos) {
@@ -55,7 +54,7 @@ public class BackendController {
     }
 
     @RequestMapping("/sendWrongTracing")
-    public String setWrongTraceId(@RequestParam String wrongTraceMap, @RequestParam String bathPos) {
+    public String sendWrongTracing(@RequestParam String wrongTraceMap, @RequestParam String bathPos) {
 
         Map<String, List<String>> processMap = JSON.parseObject(wrongTraceMap,
                 new TypeReference<Map<String, List<String>>>() {
