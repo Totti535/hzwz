@@ -1,7 +1,8 @@
-package com.alibaba.tailbase;
+package com.alibaba.tailbase.clientprocess;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.tailbase.clientprocess.ClientProcessData;
+import com.alibaba.tailbase.Constants;
+import com.alibaba.tailbase.Utils;
 import okhttp3.FormBody;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -11,41 +12,34 @@ import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.*;
 
+import static com.alibaba.tailbase.clientprocess.ClientProcessData.batchProcessMap;
+
 public class ClientDataThread extends Thread {
+
     private static final Logger LOGGER = LoggerFactory.getLogger(ClientDataThread.class.getName());
 
-    private long startPos;
-    private long currentPartSize;
-    private InputStream input;
-    private int threadNumber;
+    public static final Object lock = new Object();
 
-    public ClientDataThread(long startPos, long currentPartSize, InputStream input, int threadNumber) {
-        this.startPos = startPos;
-        this.currentPartSize = currentPartSize;
-        this.input = input;
-        this.threadNumber = threadNumber;
+    private BufferedReader bf;
+
+    public ClientDataThread(BufferedReader bf) {
+        this.bf = bf;
     }
 
+    @Override
     public void run() {
         String line;
+        int pos = 0;
         long count = 0;
+        Set<String> badTraceIdList = new HashSet<>(1000);
         try {
-            this.input.skip(startPos);
-            BufferedReader bf = new BufferedReader(new InputStreamReader(this.input));
-
-            int pos = this.threadNumber;
-            int batchPos = this.threadNumber;
-            Set<String> badTraceIdList = new HashSet<>(1000);
-
-            long byteRead = 0;
-            while (byteRead < currentPartSize && (line = bf.readLine()) != null) {
-                byteRead += line.getBytes().length;
-
+            while ((line = bf.readLine()) != null) {
                 Map<String, List<String>> traceMap = ClientProcessData.BATCH_TRACE_LIST.get(pos);
+
                 count++;
+
                 String[] cols = line.split("\\|");
                 if (cols != null && cols.length > 1) {
                     String traceId = cols[0];
@@ -67,12 +61,14 @@ public class ClientDataThread extends Thread {
                     }
                 }
                 if (count % Constants.BATCH_SIZE == 0) {
-                    pos += ClientProcessData.NUMBER_OF_THREAD;
+                    pos++;
+                    // loop cycle
                     if (pos >= ClientProcessData.BATCH_COUNT) {
-                        pos = pos % ClientProcessData.BATCH_COUNT;
+                        pos = 0;
                     }
-
                     traceMap = ClientProcessData.BATCH_TRACE_LIST.get(pos);
+                    // donot produce data, wait backend to consume data
+                    // TODO to use lock/notify
                     if (traceMap.size() > 0) {
                         while (true) {
                             Thread.sleep(10);
@@ -81,21 +77,23 @@ public class ClientDataThread extends Thread {
                             }
                         }
                     }
+                    int batchPos = (int) count / Constants.BATCH_SIZE - 1;
                     updateWrongTraceId(badTraceIdList, batchPos);
                     badTraceIdList.clear();
-                    LOGGER.info(String.format("suc to updateBadTraceId, batchPos: %s, pos: %s", batchPos, pos));
-
-                    batchPos += ClientProcessData.NUMBER_OF_THREAD;
-
                 }
             }
-            LOGGER.info(String.format("%s lines and %s bytes read by thread: %s", count, byteRead, Thread.currentThread()));
-            input.close();
+            updateWrongTraceId(badTraceIdList, (int) count / Constants.BATCH_SIZE - 1);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
+    /**
+     * call backend controller to update wrong tradeId list.
+     *
+     * @param badTraceIdList
+     * @param batchPos
+     */
     private void updateWrongTraceId(Set<String> badTraceIdList, int batchPos) {
         String json = JSON.toJSONString(badTraceIdList);
         if (badTraceIdList.size() > 0) {
@@ -106,6 +104,7 @@ public class ClientDataThread extends Thread {
                 Request request = new Request.Builder().url("http://localhost:8002/setWrongTraceId").post(body).build();
                 Response response = Utils.callHttp(request);
                 response.close();
+                LOGGER.info("suc to updateBadTraceId, batchPos:" + batchPos);
             } catch (Exception e) {
                 LOGGER.warn("fail to updateBadTraceId, json:" + json + ", batch:" + batchPos);
             }
