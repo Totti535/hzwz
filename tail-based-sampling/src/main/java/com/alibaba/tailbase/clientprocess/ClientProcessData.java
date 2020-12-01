@@ -1,7 +1,6 @@
 package com.alibaba.tailbase.clientprocess;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.TypeReference;
 import com.alibaba.tailbase.CommonController;
 import com.alibaba.tailbase.Constants;
 import com.alibaba.tailbase.Utils;
@@ -16,10 +15,8 @@ import java.net.HttpURLConnection;
 import java.net.Proxy;
 import java.net.URL;
 import java.util.*;
-import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.stream.Collectors;
 
 
@@ -32,7 +29,7 @@ public class ClientProcessData implements Runnable {
     // an list of trace map,like ring buffe.  key is traceId, value is spans ,  r
     private static List<Map<String, List<String>>> BATCH_TRACE_LIST = new ArrayList<>();
     // make 50 bucket to cache traceData
-    private static int BATCH_COUNT = 15;
+    private static int BATCH_COUNT = 6;
 
     public static void init() {
         for (int i = 0; i < BATCH_COUNT; i++) {
