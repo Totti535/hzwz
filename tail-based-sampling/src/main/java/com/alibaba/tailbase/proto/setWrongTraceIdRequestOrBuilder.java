@@ -10,7 +10,7 @@ public interface setWrongTraceIdRequestOrBuilder extends
   /**
    * <code>optional string traceIdListJson = 1;</code>
    */
-  String getTraceIdListJson();
+  java.lang.String getTraceIdListJson();
   /**
    * <code>optional string traceIdListJson = 1;</code>
    */

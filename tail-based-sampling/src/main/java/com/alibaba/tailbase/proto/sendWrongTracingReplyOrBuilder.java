@@ -3,8 +3,8 @@
 
 package com.alibaba.tailbase.proto;
 
-public interface setWrongTraceIdReplyOrBuilder extends
-    // @@protoc_insertion_point(interface_extends:server.setWrongTraceIdReply)
+public interface sendWrongTracingReplyOrBuilder extends
+    // @@protoc_insertion_point(interface_extends:server.sendWrongTracingReply)
     com.google.protobuf.MessageOrBuilder {
 
   /**

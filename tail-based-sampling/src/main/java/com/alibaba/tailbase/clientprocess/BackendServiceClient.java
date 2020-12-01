@@ -1,8 +1,6 @@
 package com.alibaba.tailbase.clientprocess;
 
-import com.alibaba.tailbase.proto.BackendServiceGrpc;
-import com.alibaba.tailbase.proto.setWrongTraceIdReply;
-import com.alibaba.tailbase.proto.setWrongTraceIdRequest;
+import com.alibaba.tailbase.proto.*;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.StatusRuntimeException;
@@ -26,7 +24,6 @@ public class BackendServiceClient {
         blockingStub = BackendServiceGrpc.newBlockingStub(channel);
     }
 
-
     public void shutdown() throws InterruptedException {
         channel.shutdown().awaitTermination(5, TimeUnit.SECONDS);
     }
@@ -38,9 +35,22 @@ public class BackendServiceClient {
         try {
             response = blockingStub.setWrongTraceId(request);
         } catch (StatusRuntimeException e) {
-            LOGGER.warn(String.format("RPC failed: %s", e.getStatus()));
+            LOGGER.warn("fail to set wrong trace id suc, batchPos: " + batchPo);
             return;
         }
         LOGGER.info("set wrong trace id suc, batchPos: " + batchPo);
+    }
+
+    public void sendWrongTracing(String json, String batchPo) {
+        sendWrongTracingRequest request = sendWrongTracingRequest.newBuilder().setWrongTraceMap(json).setBatchPos(batchPo).build();
+
+        sendWrongTracingReply response;
+        try {
+            response = blockingStub.sendWrongTracing(request);
+        } catch (StatusRuntimeException e) {
+            LOGGER.warn(" fail to send wrong tracing suc, batchPos: " + batchPo);
+            return;
+        }
+        LOGGER.info("send wrong tracing suc, batchPos: " + batchPo);
     }
 }

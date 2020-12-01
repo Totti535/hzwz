@@ -9,6 +9,8 @@ package server;
 
 service BackendService {
   rpc setWrongTraceId (setWrongTraceIdRequest) returns (setWrongTraceIdReply) {}
+
+  rpc sendWrongTracing (sendWrongTracingRequest) returns (sendWrongTracingReply) {}
 }
 
 message setWrongTraceIdRequest {
@@ -17,5 +19,14 @@ message setWrongTraceIdRequest {
 }
 
 message setWrongTraceIdReply {
+  string message = 1;
+}
+
+message sendWrongTracingRequest {
+  string wrongTraceMap = 1;
+  string batchPos = 2;
+}
+
+message sendWrongTracingReply {
   string message = 1;
 }

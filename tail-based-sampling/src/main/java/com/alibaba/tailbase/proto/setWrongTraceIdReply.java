@@ -18,7 +18,7 @@ public  final class setWrongTraceIdReply extends
     message_ = "";
   }
 
-  @Override
+  @java.lang.Override
   public final com.google.protobuf.UnknownFieldSet
   getUnknownFields() {
     return com.google.protobuf.UnknownFieldSet.getDefaultInstance();
@@ -44,7 +44,7 @@ public  final class setWrongTraceIdReply extends
             break;
           }
           case 10: {
-            String s = input.readStringRequireUtf8();
+            java.lang.String s = input.readStringRequireUtf8();
 
             message_ = s;
             break;
@@ -62,29 +62,29 @@ public  final class setWrongTraceIdReply extends
   }
   public static final com.google.protobuf.Descriptors.Descriptor
       getDescriptor() {
-    return ServerProto.internal_static_server_setWrongTraceIdReply_descriptor;
+    return com.alibaba.tailbase.proto.ServerProto.internal_static_server_setWrongTraceIdReply_descriptor;
   }
 
-  protected FieldAccessorTable
+  protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internalGetFieldAccessorTable() {
-    return ServerProto.internal_static_server_setWrongTraceIdReply_fieldAccessorTable
+    return com.alibaba.tailbase.proto.ServerProto.internal_static_server_setWrongTraceIdReply_fieldAccessorTable
         .ensureFieldAccessorsInitialized(
-            setWrongTraceIdReply.class, setWrongTraceIdReply.Builder.class);
+            com.alibaba.tailbase.proto.setWrongTraceIdReply.class, com.alibaba.tailbase.proto.setWrongTraceIdReply.Builder.class);
   }
 
   public static final int MESSAGE_FIELD_NUMBER = 1;
-  private volatile Object message_;
+  private volatile java.lang.Object message_;
   /**
    * <code>optional string message = 1;</code>
    */
-  public String getMessage() {
-    Object ref = message_;
-    if (ref instanceof String) {
-      return (String) ref;
+  public java.lang.String getMessage() {
+    java.lang.Object ref = message_;
+    if (ref instanceof java.lang.String) {
+      return (java.lang.String) ref;
     } else {
-      com.google.protobuf.ByteString bs =
+      com.google.protobuf.ByteString bs = 
           (com.google.protobuf.ByteString) ref;
-      String s = bs.toStringUtf8();
+      java.lang.String s = bs.toStringUtf8();
       message_ = s;
       return s;
     }
@@ -94,11 +94,11 @@ public  final class setWrongTraceIdReply extends
    */
   public com.google.protobuf.ByteString
       getMessageBytes() {
-    Object ref = message_;
-    if (ref instanceof String) {
-      com.google.protobuf.ByteString b =
+    java.lang.Object ref = message_;
+    if (ref instanceof java.lang.String) {
+      com.google.protobuf.ByteString b = 
           com.google.protobuf.ByteString.copyFromUtf8(
-              (String) ref);
+              (java.lang.String) ref);
       message_ = b;
       return b;
     } else {
@@ -136,15 +136,15 @@ public  final class setWrongTraceIdReply extends
   }
 
   private static final long serialVersionUID = 0L;
-  @Override
-  public boolean equals(final Object obj) {
+  @java.lang.Override
+  public boolean equals(final java.lang.Object obj) {
     if (obj == this) {
      return true;
     }
-    if (!(obj instanceof setWrongTraceIdReply)) {
+    if (!(obj instanceof com.alibaba.tailbase.proto.setWrongTraceIdReply)) {
       return super.equals(obj);
     }
-    setWrongTraceIdReply other = (setWrongTraceIdReply) obj;
+    com.alibaba.tailbase.proto.setWrongTraceIdReply other = (com.alibaba.tailbase.proto.setWrongTraceIdReply) obj;
 
     boolean result = true;
     result = result && getMessage()
@@ -152,7 +152,7 @@ public  final class setWrongTraceIdReply extends
     return result;
   }
 
-  @Override
+  @java.lang.Override
   public int hashCode() {
     if (memoizedHashCode != 0) {
       return memoizedHashCode;
@@ -166,58 +166,58 @@ public  final class setWrongTraceIdReply extends
     return hash;
   }
 
-  public static setWrongTraceIdReply parseFrom(
+  public static com.alibaba.tailbase.proto.setWrongTraceIdReply parseFrom(
       com.google.protobuf.ByteString data)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data);
   }
-  public static setWrongTraceIdReply parseFrom(
+  public static com.alibaba.tailbase.proto.setWrongTraceIdReply parseFrom(
       com.google.protobuf.ByteString data,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data, extensionRegistry);
   }
-  public static setWrongTraceIdReply parseFrom(byte[] data)
+  public static com.alibaba.tailbase.proto.setWrongTraceIdReply parseFrom(byte[] data)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data);
   }
-  public static setWrongTraceIdReply parseFrom(
+  public static com.alibaba.tailbase.proto.setWrongTraceIdReply parseFrom(
       byte[] data,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data, extensionRegistry);
   }
-  public static setWrongTraceIdReply parseFrom(java.io.InputStream input)
+  public static com.alibaba.tailbase.proto.setWrongTraceIdReply parseFrom(java.io.InputStream input)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3
         .parseWithIOException(PARSER, input);
   }
-  public static setWrongTraceIdReply parseFrom(
+  public static com.alibaba.tailbase.proto.setWrongTraceIdReply parseFrom(
       java.io.InputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3
         .parseWithIOException(PARSER, input, extensionRegistry);
   }
-  public static setWrongTraceIdReply parseDelimitedFrom(java.io.InputStream input)
+  public static com.alibaba.tailbase.proto.setWrongTraceIdReply parseDelimitedFrom(java.io.InputStream input)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3
         .parseDelimitedWithIOException(PARSER, input);
   }
-  public static setWrongTraceIdReply parseDelimitedFrom(
+  public static com.alibaba.tailbase.proto.setWrongTraceIdReply parseDelimitedFrom(
       java.io.InputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3
         .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
   }
-  public static setWrongTraceIdReply parseFrom(
+  public static com.alibaba.tailbase.proto.setWrongTraceIdReply parseFrom(
       com.google.protobuf.CodedInputStream input)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3
         .parseWithIOException(PARSER, input);
   }
-  public static setWrongTraceIdReply parseFrom(
+  public static com.alibaba.tailbase.proto.setWrongTraceIdReply parseFrom(
       com.google.protobuf.CodedInputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws java.io.IOException {
@@ -229,7 +229,7 @@ public  final class setWrongTraceIdReply extends
   public static Builder newBuilder() {
     return DEFAULT_INSTANCE.toBuilder();
   }
-  public static Builder newBuilder(setWrongTraceIdReply prototype) {
+  public static Builder newBuilder(com.alibaba.tailbase.proto.setWrongTraceIdReply prototype) {
     return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
   }
   public Builder toBuilder() {
@@ -237,9 +237,9 @@ public  final class setWrongTraceIdReply extends
         ? new Builder() : new Builder().mergeFrom(this);
   }
 
-  @Override
+  @java.lang.Override
   protected Builder newBuilderForType(
-      BuilderParent parent) {
+      com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
     Builder builder = new Builder(parent);
     return builder;
   }
@@ -249,17 +249,17 @@ public  final class setWrongTraceIdReply extends
   public static final class Builder extends
       com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
       // @@protoc_insertion_point(builder_implements:server.setWrongTraceIdReply)
-      setWrongTraceIdReplyOrBuilder {
+      com.alibaba.tailbase.proto.setWrongTraceIdReplyOrBuilder {
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return ServerProto.internal_static_server_setWrongTraceIdReply_descriptor;
+      return com.alibaba.tailbase.proto.ServerProto.internal_static_server_setWrongTraceIdReply_descriptor;
     }
 
-    protected FieldAccessorTable
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return ServerProto.internal_static_server_setWrongTraceIdReply_fieldAccessorTable
+      return com.alibaba.tailbase.proto.ServerProto.internal_static_server_setWrongTraceIdReply_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              setWrongTraceIdReply.class, setWrongTraceIdReply.Builder.class);
+              com.alibaba.tailbase.proto.setWrongTraceIdReply.class, com.alibaba.tailbase.proto.setWrongTraceIdReply.Builder.class);
     }
 
     // Construct using com.alibaba.tailbase.proto.setWrongTraceIdReply.newBuilder()
@@ -268,7 +268,7 @@ public  final class setWrongTraceIdReply extends
     }
 
     private Builder(
-        BuilderParent parent) {
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
       super(parent);
       maybeForceBuilderInitialization();
     }
@@ -286,23 +286,23 @@ public  final class setWrongTraceIdReply extends
 
     public com.google.protobuf.Descriptors.Descriptor
         getDescriptorForType() {
-      return ServerProto.internal_static_server_setWrongTraceIdReply_descriptor;
+      return com.alibaba.tailbase.proto.ServerProto.internal_static_server_setWrongTraceIdReply_descriptor;
     }
 
-    public setWrongTraceIdReply getDefaultInstanceForType() {
-      return setWrongTraceIdReply.getDefaultInstance();
+    public com.alibaba.tailbase.proto.setWrongTraceIdReply getDefaultInstanceForType() {
+      return com.alibaba.tailbase.proto.setWrongTraceIdReply.getDefaultInstance();
     }
 
-    public setWrongTraceIdReply build() {
-      setWrongTraceIdReply result = buildPartial();
+    public com.alibaba.tailbase.proto.setWrongTraceIdReply build() {
+      com.alibaba.tailbase.proto.setWrongTraceIdReply result = buildPartial();
       if (!result.isInitialized()) {
         throw newUninitializedMessageException(result);
       }
       return result;
     }
 
-    public setWrongTraceIdReply buildPartial() {
-      setWrongTraceIdReply result = new setWrongTraceIdReply(this);
+    public com.alibaba.tailbase.proto.setWrongTraceIdReply buildPartial() {
+      com.alibaba.tailbase.proto.setWrongTraceIdReply result = new com.alibaba.tailbase.proto.setWrongTraceIdReply(this);
       result.message_ = message_;
       onBuilt();
       return result;
@@ -335,16 +335,16 @@ public  final class setWrongTraceIdReply extends
       return (Builder) super.addRepeatedField(field, value);
     }
     public Builder mergeFrom(com.google.protobuf.Message other) {
-      if (other instanceof setWrongTraceIdReply) {
-        return mergeFrom((setWrongTraceIdReply)other);
+      if (other instanceof com.alibaba.tailbase.proto.setWrongTraceIdReply) {
+        return mergeFrom((com.alibaba.tailbase.proto.setWrongTraceIdReply)other);
       } else {
         super.mergeFrom(other);
         return this;
       }
     }
 
-    public Builder mergeFrom(setWrongTraceIdReply other) {
-      if (other == setWrongTraceIdReply.getDefaultInstance()) return this;
+    public Builder mergeFrom(com.alibaba.tailbase.proto.setWrongTraceIdReply other) {
+      if (other == com.alibaba.tailbase.proto.setWrongTraceIdReply.getDefaultInstance()) return this;
       if (!other.getMessage().isEmpty()) {
         message_ = other.message_;
         onChanged();
@@ -361,11 +361,11 @@ public  final class setWrongTraceIdReply extends
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      setWrongTraceIdReply parsedMessage = null;
+      com.alibaba.tailbase.proto.setWrongTraceIdReply parsedMessage = null;
       try {
         parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-        parsedMessage = (setWrongTraceIdReply) e.getUnfinishedMessage();
+        parsedMessage = (com.alibaba.tailbase.proto.setWrongTraceIdReply) e.getUnfinishedMessage();
         throw e.unwrapIOException();
       } finally {
         if (parsedMessage != null) {
@@ -375,20 +375,20 @@ public  final class setWrongTraceIdReply extends
       return this;
     }
 
-    private Object message_ = "";
+    private java.lang.Object message_ = "";
     /**
      * <code>optional string message = 1;</code>
      */
-    public String getMessage() {
-      Object ref = message_;
-      if (!(ref instanceof String)) {
+    public java.lang.String getMessage() {
+      java.lang.Object ref = message_;
+      if (!(ref instanceof java.lang.String)) {
         com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
-        String s = bs.toStringUtf8();
+        java.lang.String s = bs.toStringUtf8();
         message_ = s;
         return s;
       } else {
-        return (String) ref;
+        return (java.lang.String) ref;
       }
     }
     /**
@@ -396,11 +396,11 @@ public  final class setWrongTraceIdReply extends
      */
     public com.google.protobuf.ByteString
         getMessageBytes() {
-      Object ref = message_;
+      java.lang.Object ref = message_;
       if (ref instanceof String) {
-        com.google.protobuf.ByteString b =
+        com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
-                (String) ref);
+                (java.lang.String) ref);
         message_ = b;
         return b;
       } else {
@@ -411,11 +411,11 @@ public  final class setWrongTraceIdReply extends
      * <code>optional string message = 1;</code>
      */
     public Builder setMessage(
-        String value) {
+        java.lang.String value) {
       if (value == null) {
     throw new NullPointerException();
   }
-
+  
       message_ = value;
       onChanged();
       return this;
@@ -424,7 +424,7 @@ public  final class setWrongTraceIdReply extends
      * <code>optional string message = 1;</code>
      */
     public Builder clearMessage() {
-
+      
       message_ = getDefaultInstance().getMessage();
       onChanged();
       return this;
@@ -438,7 +438,7 @@ public  final class setWrongTraceIdReply extends
     throw new NullPointerException();
   }
   checkByteStringIsUtf8(value);
-
+      
       message_ = value;
       onChanged();
       return this;
@@ -458,12 +458,12 @@ public  final class setWrongTraceIdReply extends
   }
 
   // @@protoc_insertion_point(class_scope:server.setWrongTraceIdReply)
-  private static final setWrongTraceIdReply DEFAULT_INSTANCE;
+  private static final com.alibaba.tailbase.proto.setWrongTraceIdReply DEFAULT_INSTANCE;
   static {
-    DEFAULT_INSTANCE = new setWrongTraceIdReply();
+    DEFAULT_INSTANCE = new com.alibaba.tailbase.proto.setWrongTraceIdReply();
   }
 
-  public static setWrongTraceIdReply getDefaultInstance() {
+  public static com.alibaba.tailbase.proto.setWrongTraceIdReply getDefaultInstance() {
     return DEFAULT_INSTANCE;
   }
 
@@ -481,12 +481,12 @@ public  final class setWrongTraceIdReply extends
     return PARSER;
   }
 
-  @Override
+  @java.lang.Override
   public com.google.protobuf.Parser<setWrongTraceIdReply> getParserForType() {
     return PARSER;
   }
 
-  public setWrongTraceIdReply getDefaultInstanceForType() {
+  public com.alibaba.tailbase.proto.setWrongTraceIdReply getDefaultInstanceForType() {
     return DEFAULT_INSTANCE;
   }
 

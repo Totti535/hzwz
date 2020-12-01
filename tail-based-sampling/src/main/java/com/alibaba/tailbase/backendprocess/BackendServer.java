@@ -1,5 +1,6 @@
 package com.alibaba.tailbase.backendprocess;
 
+import com.alibaba.tailbase.Constants;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import org.slf4j.Logger;
@@ -15,7 +16,7 @@ public class BackendServer {
 
     private void start() throws IOException {
         /* The port on which the server should run */
-        int port = 8003;
+        int port = Constants.GRPC_PORT;
         server = ServerBuilder.forPort(port)
                 .addService(new BackendServiceGrpcImpl())
                 .build()

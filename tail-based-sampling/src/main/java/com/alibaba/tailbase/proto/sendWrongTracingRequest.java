@@ -4,19 +4,19 @@
 package com.alibaba.tailbase.proto;
 
 /**
- * Protobuf type {@code server.setWrongTraceIdRequest}
+ * Protobuf type {@code server.sendWrongTracingRequest}
  */
-public  final class setWrongTraceIdRequest extends
+public  final class sendWrongTracingRequest extends
     com.google.protobuf.GeneratedMessageV3 implements
-    // @@protoc_insertion_point(message_implements:server.setWrongTraceIdRequest)
-    setWrongTraceIdRequestOrBuilder {
-  // Use setWrongTraceIdRequest.newBuilder() to construct.
-  private setWrongTraceIdRequest(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+    // @@protoc_insertion_point(message_implements:server.sendWrongTracingRequest)
+    sendWrongTracingRequestOrBuilder {
+  // Use sendWrongTracingRequest.newBuilder() to construct.
+  private sendWrongTracingRequest(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
     super(builder);
   }
-  private setWrongTraceIdRequest() {
-    traceIdListJson_ = "";
-    batchPos_ = 0;
+  private sendWrongTracingRequest() {
+    wrongTraceMap_ = "";
+    batchPos_ = "";
   }
 
   @java.lang.Override
@@ -24,7 +24,7 @@ public  final class setWrongTraceIdRequest extends
   getUnknownFields() {
     return com.google.protobuf.UnknownFieldSet.getDefaultInstance();
   }
-  private setWrongTraceIdRequest(
+  private sendWrongTracingRequest(
       com.google.protobuf.CodedInputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
@@ -47,12 +47,13 @@ public  final class setWrongTraceIdRequest extends
           case 10: {
             java.lang.String s = input.readStringRequireUtf8();
 
-            traceIdListJson_ = s;
+            wrongTraceMap_ = s;
             break;
           }
-          case 16: {
+          case 18: {
+            java.lang.String s = input.readStringRequireUtf8();
 
-            batchPos_ = input.readInt32();
+            batchPos_ = s;
             break;
           }
         }
@@ -68,44 +69,44 @@ public  final class setWrongTraceIdRequest extends
   }
   public static final com.google.protobuf.Descriptors.Descriptor
       getDescriptor() {
-    return com.alibaba.tailbase.proto.ServerProto.internal_static_server_setWrongTraceIdRequest_descriptor;
+    return com.alibaba.tailbase.proto.ServerProto.internal_static_server_sendWrongTracingRequest_descriptor;
   }
 
   protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internalGetFieldAccessorTable() {
-    return com.alibaba.tailbase.proto.ServerProto.internal_static_server_setWrongTraceIdRequest_fieldAccessorTable
+    return com.alibaba.tailbase.proto.ServerProto.internal_static_server_sendWrongTracingRequest_fieldAccessorTable
         .ensureFieldAccessorsInitialized(
-            com.alibaba.tailbase.proto.setWrongTraceIdRequest.class, com.alibaba.tailbase.proto.setWrongTraceIdRequest.Builder.class);
+            com.alibaba.tailbase.proto.sendWrongTracingRequest.class, com.alibaba.tailbase.proto.sendWrongTracingRequest.Builder.class);
   }
 
-  public static final int TRACEIDLISTJSON_FIELD_NUMBER = 1;
-  private volatile java.lang.Object traceIdListJson_;
+  public static final int WRONGTRACEMAP_FIELD_NUMBER = 1;
+  private volatile java.lang.Object wrongTraceMap_;
   /**
-   * <code>optional string traceIdListJson = 1;</code>
+   * <code>optional string wrongTraceMap = 1;</code>
    */
-  public java.lang.String getTraceIdListJson() {
-    java.lang.Object ref = traceIdListJson_;
+  public java.lang.String getWrongTraceMap() {
+    java.lang.Object ref = wrongTraceMap_;
     if (ref instanceof java.lang.String) {
       return (java.lang.String) ref;
     } else {
       com.google.protobuf.ByteString bs = 
           (com.google.protobuf.ByteString) ref;
       java.lang.String s = bs.toStringUtf8();
-      traceIdListJson_ = s;
+      wrongTraceMap_ = s;
       return s;
     }
   }
   /**
-   * <code>optional string traceIdListJson = 1;</code>
+   * <code>optional string wrongTraceMap = 1;</code>
    */
   public com.google.protobuf.ByteString
-      getTraceIdListJsonBytes() {
-    java.lang.Object ref = traceIdListJson_;
+      getWrongTraceMapBytes() {
+    java.lang.Object ref = wrongTraceMap_;
     if (ref instanceof java.lang.String) {
       com.google.protobuf.ByteString b = 
           com.google.protobuf.ByteString.copyFromUtf8(
               (java.lang.String) ref);
-      traceIdListJson_ = b;
+      wrongTraceMap_ = b;
       return b;
     } else {
       return (com.google.protobuf.ByteString) ref;
@@ -113,12 +114,37 @@ public  final class setWrongTraceIdRequest extends
   }
 
   public static final int BATCHPOS_FIELD_NUMBER = 2;
-  private int batchPos_;
+  private volatile java.lang.Object batchPos_;
   /**
-   * <code>optional int32 batchPos = 2;</code>
+   * <code>optional string batchPos = 2;</code>
    */
-  public int getBatchPos() {
-    return batchPos_;
+  public java.lang.String getBatchPos() {
+    java.lang.Object ref = batchPos_;
+    if (ref instanceof java.lang.String) {
+      return (java.lang.String) ref;
+    } else {
+      com.google.protobuf.ByteString bs = 
+          (com.google.protobuf.ByteString) ref;
+      java.lang.String s = bs.toStringUtf8();
+      batchPos_ = s;
+      return s;
+    }
+  }
+  /**
+   * <code>optional string batchPos = 2;</code>
+   */
+  public com.google.protobuf.ByteString
+      getBatchPosBytes() {
+    java.lang.Object ref = batchPos_;
+    if (ref instanceof java.lang.String) {
+      com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString.copyFromUtf8(
+              (java.lang.String) ref);
+      batchPos_ = b;
+      return b;
+    } else {
+      return (com.google.protobuf.ByteString) ref;
+    }
   }
 
   private byte memoizedIsInitialized = -1;
@@ -133,11 +159,11 @@ public  final class setWrongTraceIdRequest extends
 
   public void writeTo(com.google.protobuf.CodedOutputStream output)
                       throws java.io.IOException {
-    if (!getTraceIdListJsonBytes().isEmpty()) {
-      com.google.protobuf.GeneratedMessageV3.writeString(output, 1, traceIdListJson_);
+    if (!getWrongTraceMapBytes().isEmpty()) {
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 1, wrongTraceMap_);
     }
-    if (batchPos_ != 0) {
-      output.writeInt32(2, batchPos_);
+    if (!getBatchPosBytes().isEmpty()) {
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 2, batchPos_);
     }
   }
 
@@ -146,12 +172,11 @@ public  final class setWrongTraceIdRequest extends
     if (size != -1) return size;
 
     size = 0;
-    if (!getTraceIdListJsonBytes().isEmpty()) {
-      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, traceIdListJson_);
+    if (!getWrongTraceMapBytes().isEmpty()) {
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, wrongTraceMap_);
     }
-    if (batchPos_ != 0) {
-      size += com.google.protobuf.CodedOutputStream
-        .computeInt32Size(2, batchPos_);
+    if (!getBatchPosBytes().isEmpty()) {
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, batchPos_);
     }
     memoizedSize = size;
     return size;
@@ -163,16 +188,16 @@ public  final class setWrongTraceIdRequest extends
     if (obj == this) {
      return true;
     }
-    if (!(obj instanceof com.alibaba.tailbase.proto.setWrongTraceIdRequest)) {
+    if (!(obj instanceof com.alibaba.tailbase.proto.sendWrongTracingRequest)) {
       return super.equals(obj);
     }
-    com.alibaba.tailbase.proto.setWrongTraceIdRequest other = (com.alibaba.tailbase.proto.setWrongTraceIdRequest) obj;
+    com.alibaba.tailbase.proto.sendWrongTracingRequest other = (com.alibaba.tailbase.proto.sendWrongTracingRequest) obj;
 
     boolean result = true;
-    result = result && getTraceIdListJson()
-        .equals(other.getTraceIdListJson());
-    result = result && (getBatchPos()
-        == other.getBatchPos());
+    result = result && getWrongTraceMap()
+        .equals(other.getWrongTraceMap());
+    result = result && getBatchPos()
+        .equals(other.getBatchPos());
     return result;
   }
 
@@ -183,67 +208,67 @@ public  final class setWrongTraceIdRequest extends
     }
     int hash = 41;
     hash = (19 * hash) + getDescriptorForType().hashCode();
-    hash = (37 * hash) + TRACEIDLISTJSON_FIELD_NUMBER;
-    hash = (53 * hash) + getTraceIdListJson().hashCode();
+    hash = (37 * hash) + WRONGTRACEMAP_FIELD_NUMBER;
+    hash = (53 * hash) + getWrongTraceMap().hashCode();
     hash = (37 * hash) + BATCHPOS_FIELD_NUMBER;
-    hash = (53 * hash) + getBatchPos();
+    hash = (53 * hash) + getBatchPos().hashCode();
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
   }
 
-  public static com.alibaba.tailbase.proto.setWrongTraceIdRequest parseFrom(
+  public static com.alibaba.tailbase.proto.sendWrongTracingRequest parseFrom(
       com.google.protobuf.ByteString data)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data);
   }
-  public static com.alibaba.tailbase.proto.setWrongTraceIdRequest parseFrom(
+  public static com.alibaba.tailbase.proto.sendWrongTracingRequest parseFrom(
       com.google.protobuf.ByteString data,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data, extensionRegistry);
   }
-  public static com.alibaba.tailbase.proto.setWrongTraceIdRequest parseFrom(byte[] data)
+  public static com.alibaba.tailbase.proto.sendWrongTracingRequest parseFrom(byte[] data)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data);
   }
-  public static com.alibaba.tailbase.proto.setWrongTraceIdRequest parseFrom(
+  public static com.alibaba.tailbase.proto.sendWrongTracingRequest parseFrom(
       byte[] data,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data, extensionRegistry);
   }
-  public static com.alibaba.tailbase.proto.setWrongTraceIdRequest parseFrom(java.io.InputStream input)
+  public static com.alibaba.tailbase.proto.sendWrongTracingRequest parseFrom(java.io.InputStream input)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3
         .parseWithIOException(PARSER, input);
   }
-  public static com.alibaba.tailbase.proto.setWrongTraceIdRequest parseFrom(
+  public static com.alibaba.tailbase.proto.sendWrongTracingRequest parseFrom(
       java.io.InputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3
         .parseWithIOException(PARSER, input, extensionRegistry);
   }
-  public static com.alibaba.tailbase.proto.setWrongTraceIdRequest parseDelimitedFrom(java.io.InputStream input)
+  public static com.alibaba.tailbase.proto.sendWrongTracingRequest parseDelimitedFrom(java.io.InputStream input)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3
         .parseDelimitedWithIOException(PARSER, input);
   }
-  public static com.alibaba.tailbase.proto.setWrongTraceIdRequest parseDelimitedFrom(
+  public static com.alibaba.tailbase.proto.sendWrongTracingRequest parseDelimitedFrom(
       java.io.InputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3
         .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
   }
-  public static com.alibaba.tailbase.proto.setWrongTraceIdRequest parseFrom(
+  public static com.alibaba.tailbase.proto.sendWrongTracingRequest parseFrom(
       com.google.protobuf.CodedInputStream input)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3
         .parseWithIOException(PARSER, input);
   }
-  public static com.alibaba.tailbase.proto.setWrongTraceIdRequest parseFrom(
+  public static com.alibaba.tailbase.proto.sendWrongTracingRequest parseFrom(
       com.google.protobuf.CodedInputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws java.io.IOException {
@@ -255,7 +280,7 @@ public  final class setWrongTraceIdRequest extends
   public static Builder newBuilder() {
     return DEFAULT_INSTANCE.toBuilder();
   }
-  public static Builder newBuilder(com.alibaba.tailbase.proto.setWrongTraceIdRequest prototype) {
+  public static Builder newBuilder(com.alibaba.tailbase.proto.sendWrongTracingRequest prototype) {
     return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
   }
   public Builder toBuilder() {
@@ -270,25 +295,25 @@ public  final class setWrongTraceIdRequest extends
     return builder;
   }
   /**
-   * Protobuf type {@code server.setWrongTraceIdRequest}
+   * Protobuf type {@code server.sendWrongTracingRequest}
    */
   public static final class Builder extends
       com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-      // @@protoc_insertion_point(builder_implements:server.setWrongTraceIdRequest)
-      com.alibaba.tailbase.proto.setWrongTraceIdRequestOrBuilder {
+      // @@protoc_insertion_point(builder_implements:server.sendWrongTracingRequest)
+      com.alibaba.tailbase.proto.sendWrongTracingRequestOrBuilder {
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return com.alibaba.tailbase.proto.ServerProto.internal_static_server_setWrongTraceIdRequest_descriptor;
+      return com.alibaba.tailbase.proto.ServerProto.internal_static_server_sendWrongTracingRequest_descriptor;
     }
 
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return com.alibaba.tailbase.proto.ServerProto.internal_static_server_setWrongTraceIdRequest_fieldAccessorTable
+      return com.alibaba.tailbase.proto.ServerProto.internal_static_server_sendWrongTracingRequest_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              com.alibaba.tailbase.proto.setWrongTraceIdRequest.class, com.alibaba.tailbase.proto.setWrongTraceIdRequest.Builder.class);
+              com.alibaba.tailbase.proto.sendWrongTracingRequest.class, com.alibaba.tailbase.proto.sendWrongTracingRequest.Builder.class);
     }
 
-    // Construct using com.alibaba.tailbase.proto.setWrongTraceIdRequest.newBuilder()
+    // Construct using com.alibaba.tailbase.proto.sendWrongTracingRequest.newBuilder()
     private Builder() {
       maybeForceBuilderInitialization();
     }
@@ -305,33 +330,33 @@ public  final class setWrongTraceIdRequest extends
     }
     public Builder clear() {
       super.clear();
-      traceIdListJson_ = "";
+      wrongTraceMap_ = "";
 
-      batchPos_ = 0;
+      batchPos_ = "";
 
       return this;
     }
 
     public com.google.protobuf.Descriptors.Descriptor
         getDescriptorForType() {
-      return com.alibaba.tailbase.proto.ServerProto.internal_static_server_setWrongTraceIdRequest_descriptor;
+      return com.alibaba.tailbase.proto.ServerProto.internal_static_server_sendWrongTracingRequest_descriptor;
     }
 
-    public com.alibaba.tailbase.proto.setWrongTraceIdRequest getDefaultInstanceForType() {
-      return com.alibaba.tailbase.proto.setWrongTraceIdRequest.getDefaultInstance();
+    public com.alibaba.tailbase.proto.sendWrongTracingRequest getDefaultInstanceForType() {
+      return com.alibaba.tailbase.proto.sendWrongTracingRequest.getDefaultInstance();
     }
 
-    public com.alibaba.tailbase.proto.setWrongTraceIdRequest build() {
-      com.alibaba.tailbase.proto.setWrongTraceIdRequest result = buildPartial();
+    public com.alibaba.tailbase.proto.sendWrongTracingRequest build() {
+      com.alibaba.tailbase.proto.sendWrongTracingRequest result = buildPartial();
       if (!result.isInitialized()) {
         throw newUninitializedMessageException(result);
       }
       return result;
     }
 
-    public com.alibaba.tailbase.proto.setWrongTraceIdRequest buildPartial() {
-      com.alibaba.tailbase.proto.setWrongTraceIdRequest result = new com.alibaba.tailbase.proto.setWrongTraceIdRequest(this);
-      result.traceIdListJson_ = traceIdListJson_;
+    public com.alibaba.tailbase.proto.sendWrongTracingRequest buildPartial() {
+      com.alibaba.tailbase.proto.sendWrongTracingRequest result = new com.alibaba.tailbase.proto.sendWrongTracingRequest(this);
+      result.wrongTraceMap_ = wrongTraceMap_;
       result.batchPos_ = batchPos_;
       onBuilt();
       return result;
@@ -364,22 +389,23 @@ public  final class setWrongTraceIdRequest extends
       return (Builder) super.addRepeatedField(field, value);
     }
     public Builder mergeFrom(com.google.protobuf.Message other) {
-      if (other instanceof com.alibaba.tailbase.proto.setWrongTraceIdRequest) {
-        return mergeFrom((com.alibaba.tailbase.proto.setWrongTraceIdRequest)other);
+      if (other instanceof com.alibaba.tailbase.proto.sendWrongTracingRequest) {
+        return mergeFrom((com.alibaba.tailbase.proto.sendWrongTracingRequest)other);
       } else {
         super.mergeFrom(other);
         return this;
       }
     }
 
-    public Builder mergeFrom(com.alibaba.tailbase.proto.setWrongTraceIdRequest other) {
-      if (other == com.alibaba.tailbase.proto.setWrongTraceIdRequest.getDefaultInstance()) return this;
-      if (!other.getTraceIdListJson().isEmpty()) {
-        traceIdListJson_ = other.traceIdListJson_;
+    public Builder mergeFrom(com.alibaba.tailbase.proto.sendWrongTracingRequest other) {
+      if (other == com.alibaba.tailbase.proto.sendWrongTracingRequest.getDefaultInstance()) return this;
+      if (!other.getWrongTraceMap().isEmpty()) {
+        wrongTraceMap_ = other.wrongTraceMap_;
         onChanged();
       }
-      if (other.getBatchPos() != 0) {
-        setBatchPos(other.getBatchPos());
+      if (!other.getBatchPos().isEmpty()) {
+        batchPos_ = other.batchPos_;
+        onChanged();
       }
       onChanged();
       return this;
@@ -393,11 +419,11 @@ public  final class setWrongTraceIdRequest extends
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      com.alibaba.tailbase.proto.setWrongTraceIdRequest parsedMessage = null;
+      com.alibaba.tailbase.proto.sendWrongTracingRequest parsedMessage = null;
       try {
         parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-        parsedMessage = (com.alibaba.tailbase.proto.setWrongTraceIdRequest) e.getUnfinishedMessage();
+        parsedMessage = (com.alibaba.tailbase.proto.sendWrongTracingRequest) e.getUnfinishedMessage();
         throw e.unwrapIOException();
       } finally {
         if (parsedMessage != null) {
@@ -407,97 +433,140 @@ public  final class setWrongTraceIdRequest extends
       return this;
     }
 
-    private java.lang.Object traceIdListJson_ = "";
+    private java.lang.Object wrongTraceMap_ = "";
     /**
-     * <code>optional string traceIdListJson = 1;</code>
+     * <code>optional string wrongTraceMap = 1;</code>
      */
-    public java.lang.String getTraceIdListJson() {
-      java.lang.Object ref = traceIdListJson_;
+    public java.lang.String getWrongTraceMap() {
+      java.lang.Object ref = wrongTraceMap_;
       if (!(ref instanceof java.lang.String)) {
         com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
-        traceIdListJson_ = s;
+        wrongTraceMap_ = s;
         return s;
       } else {
         return (java.lang.String) ref;
       }
     }
     /**
-     * <code>optional string traceIdListJson = 1;</code>
+     * <code>optional string wrongTraceMap = 1;</code>
      */
     public com.google.protobuf.ByteString
-        getTraceIdListJsonBytes() {
-      java.lang.Object ref = traceIdListJson_;
+        getWrongTraceMapBytes() {
+      java.lang.Object ref = wrongTraceMap_;
       if (ref instanceof String) {
         com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
-        traceIdListJson_ = b;
+        wrongTraceMap_ = b;
         return b;
       } else {
         return (com.google.protobuf.ByteString) ref;
       }
     }
     /**
-     * <code>optional string traceIdListJson = 1;</code>
+     * <code>optional string wrongTraceMap = 1;</code>
      */
-    public Builder setTraceIdListJson(
+    public Builder setWrongTraceMap(
         java.lang.String value) {
       if (value == null) {
     throw new NullPointerException();
   }
   
-      traceIdListJson_ = value;
+      wrongTraceMap_ = value;
       onChanged();
       return this;
     }
     /**
-     * <code>optional string traceIdListJson = 1;</code>
+     * <code>optional string wrongTraceMap = 1;</code>
      */
-    public Builder clearTraceIdListJson() {
+    public Builder clearWrongTraceMap() {
       
-      traceIdListJson_ = getDefaultInstance().getTraceIdListJson();
+      wrongTraceMap_ = getDefaultInstance().getWrongTraceMap();
       onChanged();
       return this;
     }
     /**
-     * <code>optional string traceIdListJson = 1;</code>
+     * <code>optional string wrongTraceMap = 1;</code>
      */
-    public Builder setTraceIdListJsonBytes(
+    public Builder setWrongTraceMapBytes(
         com.google.protobuf.ByteString value) {
       if (value == null) {
     throw new NullPointerException();
   }
   checkByteStringIsUtf8(value);
       
-      traceIdListJson_ = value;
+      wrongTraceMap_ = value;
       onChanged();
       return this;
     }
 
-    private int batchPos_ ;
+    private java.lang.Object batchPos_ = "";
     /**
-     * <code>optional int32 batchPos = 2;</code>
+     * <code>optional string batchPos = 2;</code>
      */
-    public int getBatchPos() {
-      return batchPos_;
+    public java.lang.String getBatchPos() {
+      java.lang.Object ref = batchPos_;
+      if (!(ref instanceof java.lang.String)) {
+        com.google.protobuf.ByteString bs =
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        batchPos_ = s;
+        return s;
+      } else {
+        return (java.lang.String) ref;
+      }
     }
     /**
-     * <code>optional int32 batchPos = 2;</code>
+     * <code>optional string batchPos = 2;</code>
      */
-    public Builder setBatchPos(int value) {
-      
+    public com.google.protobuf.ByteString
+        getBatchPosBytes() {
+      java.lang.Object ref = batchPos_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        batchPos_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    /**
+     * <code>optional string batchPos = 2;</code>
+     */
+    public Builder setBatchPos(
+        java.lang.String value) {
+      if (value == null) {
+    throw new NullPointerException();
+  }
+  
       batchPos_ = value;
       onChanged();
       return this;
     }
     /**
-     * <code>optional int32 batchPos = 2;</code>
+     * <code>optional string batchPos = 2;</code>
      */
     public Builder clearBatchPos() {
       
-      batchPos_ = 0;
+      batchPos_ = getDefaultInstance().getBatchPos();
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>optional string batchPos = 2;</code>
+     */
+    public Builder setBatchPosBytes(
+        com.google.protobuf.ByteString value) {
+      if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+      
+      batchPos_ = value;
       onChanged();
       return this;
     }
@@ -512,39 +581,39 @@ public  final class setWrongTraceIdRequest extends
     }
 
 
-    // @@protoc_insertion_point(builder_scope:server.setWrongTraceIdRequest)
+    // @@protoc_insertion_point(builder_scope:server.sendWrongTracingRequest)
   }
 
-  // @@protoc_insertion_point(class_scope:server.setWrongTraceIdRequest)
-  private static final com.alibaba.tailbase.proto.setWrongTraceIdRequest DEFAULT_INSTANCE;
+  // @@protoc_insertion_point(class_scope:server.sendWrongTracingRequest)
+  private static final com.alibaba.tailbase.proto.sendWrongTracingRequest DEFAULT_INSTANCE;
   static {
-    DEFAULT_INSTANCE = new com.alibaba.tailbase.proto.setWrongTraceIdRequest();
+    DEFAULT_INSTANCE = new com.alibaba.tailbase.proto.sendWrongTracingRequest();
   }
 
-  public static com.alibaba.tailbase.proto.setWrongTraceIdRequest getDefaultInstance() {
+  public static com.alibaba.tailbase.proto.sendWrongTracingRequest getDefaultInstance() {
     return DEFAULT_INSTANCE;
   }
 
-  private static final com.google.protobuf.Parser<setWrongTraceIdRequest>
-      PARSER = new com.google.protobuf.AbstractParser<setWrongTraceIdRequest>() {
-    public setWrongTraceIdRequest parsePartialFrom(
+  private static final com.google.protobuf.Parser<sendWrongTracingRequest>
+      PARSER = new com.google.protobuf.AbstractParser<sendWrongTracingRequest>() {
+    public sendWrongTracingRequest parsePartialFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
-        return new setWrongTraceIdRequest(input, extensionRegistry);
+        return new sendWrongTracingRequest(input, extensionRegistry);
     }
   };
 
-  public static com.google.protobuf.Parser<setWrongTraceIdRequest> parser() {
+  public static com.google.protobuf.Parser<sendWrongTracingRequest> parser() {
     return PARSER;
   }
 
   @java.lang.Override
-  public com.google.protobuf.Parser<setWrongTraceIdRequest> getParserForType() {
+  public com.google.protobuf.Parser<sendWrongTracingRequest> getParserForType() {
     return PARSER;
   }
 
-  public com.alibaba.tailbase.proto.setWrongTraceIdRequest getDefaultInstanceForType() {
+  public com.alibaba.tailbase.proto.sendWrongTracingRequest getDefaultInstanceForType() {
     return DEFAULT_INSTANCE;
   }
 

@@ -24,6 +24,16 @@ public final class ServerProto {
   static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_server_setWrongTraceIdReply_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_server_sendWrongTracingRequest_descriptor;
+  static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_server_sendWrongTracingRequest_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_server_sendWrongTracingReply_descriptor;
+  static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_server_sendWrongTracingReply_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -32,15 +42,20 @@ public final class ServerProto {
   private static  com.google.protobuf.Descriptors.FileDescriptor
       descriptor;
   static {
-    String[] descriptorData = {
+    java.lang.String[] descriptorData = {
       "\n\014Server.proto\022\006server\"C\n\026setWrongTraceI" +
       "dRequest\022\027\n\017traceIdListJson\030\001 \001(\t\022\020\n\010bat" +
       "chPos\030\002 \001(\005\"\'\n\024setWrongTraceIdReply\022\017\n\007m" +
-      "essage\030\001 \001(\t2c\n\016BackendService\022Q\n\017setWro" +
-      "ngTraceId\022\036.server.setWrongTraceIdReques" +
-      "t\032\034.server.setWrongTraceIdReply\"\000B1\n\032com" +
-      ".alibaba.tailbase.protoB\013ServerProtoP\001\242\002" +
-      "\003HLWb\006proto3"
+      "essage\030\001 \001(\t\"B\n\027sendWrongTracingRequest\022" +
+      "\025\n\rwrongTraceMap\030\001 \001(\t\022\020\n\010batchPos\030\002 \001(\t" +
+      "\"(\n\025sendWrongTracingReply\022\017\n\007message\030\001 \001" +
+      "(\t2\271\001\n\016BackendService\022Q\n\017setWrongTraceId" +
+      "\022\036.server.setWrongTraceIdRequest\032\034.serve" +
+      "r.setWrongTraceIdReply\"\000\022T\n\020sendWrongTra" +
+      "cing\022\037.server.sendWrongTracingRequest\032\035.",
+      "server.sendWrongTracingReply\"\000B1\n\032com.al" +
+      "ibaba.tailbase.protoB\013ServerProtoP\001\242\002\003HL" +
+      "Wb\006proto3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -59,13 +74,25 @@ public final class ServerProto {
     internal_static_server_setWrongTraceIdRequest_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_server_setWrongTraceIdRequest_descriptor,
-        new String[] { "TraceIdListJson", "BatchPos", });
+        new java.lang.String[] { "TraceIdListJson", "BatchPos", });
     internal_static_server_setWrongTraceIdReply_descriptor =
       getDescriptor().getMessageTypes().get(1);
     internal_static_server_setWrongTraceIdReply_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_server_setWrongTraceIdReply_descriptor,
-        new String[] { "Message", });
+        new java.lang.String[] { "Message", });
+    internal_static_server_sendWrongTracingRequest_descriptor =
+      getDescriptor().getMessageTypes().get(2);
+    internal_static_server_sendWrongTracingRequest_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_server_sendWrongTracingRequest_descriptor,
+        new java.lang.String[] { "WrongTraceMap", "BatchPos", });
+    internal_static_server_sendWrongTracingReply_descriptor =
+      getDescriptor().getMessageTypes().get(3);
+    internal_static_server_sendWrongTracingReply_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_server_sendWrongTracingReply_descriptor,
+        new java.lang.String[] { "Message", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)

@@ -33,7 +33,7 @@ public class ClientProcessData implements Runnable {
     // make 50 bucket to cache traceData
     private static int BATCH_COUNT = 15;
 
-    BackendServiceClient backendServiceClient = new BackendServiceClient("localhost", 8003);
+    private static final BackendServiceClient backendServiceClient = new BackendServiceClient("localhost", Constants.GRPC_PORT);
 
     public static void init() {
         for (int i = 0; i < BATCH_COUNT; i++) {
@@ -112,15 +112,8 @@ public class ClientProcessData implements Runnable {
         }
     }
 
-    /**
-     * call backend controller to update wrong tradeId list.
-     *
-     * @param badTraceIdList
-     * @param batchPos
-     */
     private void updateWrongTraceId(Set<String> badTraceIdList, int batchPos) {
         String json = JSON.toJSONString(badTraceIdList);
-
         backendServiceClient.setWrongTraceId(json, batchPos);
 
         /*
@@ -139,7 +132,6 @@ public class ClientProcessData implements Runnable {
         */
     }
 
-
     // notify backend process when client process has finished.
     private void callFinish() {
         try {
@@ -150,7 +142,6 @@ public class ClientProcessData implements Runnable {
             LOGGER.warn("fail to callFinish");
         }
     }
-
 
     public static String getWrongTracing(List<String> traceIdList, int batchPos) {
         Map<String, List<String>> wrongTraceMap = new HashMap<>();
@@ -173,6 +164,8 @@ public class ClientProcessData implements Runnable {
 
     public static void sendWrongTracing(List<String> traceIdList, int batchPos) {
         String json = getWrongTracing(traceIdList, batchPos);
+        backendServiceClient.sendWrongTracing(json, batchPos + "");
+        /*
         try {
             LOGGER.info("send wrong trace map, batchPos: " + batchPos);
 
@@ -186,6 +179,7 @@ public class ClientProcessData implements Runnable {
         } catch (Exception e) {
             LOGGER.warn("fail to send wrong trace map, batchPos: " + batchPos);
         }
+        */
     }
 
     private static void getWrongTraceWithBatch(int batchPos, int pos, List<String> traceIdList, Map<String, List<String>> wrongTraceMap) {
