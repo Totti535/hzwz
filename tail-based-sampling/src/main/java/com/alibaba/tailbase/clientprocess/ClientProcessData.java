@@ -31,9 +31,9 @@ public class ClientProcessData implements Runnable {
     // an list of trace map,like ring buffe.  key is traceId, value is spans ,  r
     public static Map<Integer, List<Map<String, List<String>>>> BATCH_TRACE_LIST = new ConcurrentHashMap<>();
     // make 50 bucket to cache traceData
-    public static int BATCH_COUNT = 8;
+    public static int BATCH_COUNT = 15;
 
-    private static int OVERLAP_BUFFER = 500;
+    private static int OVERLAP_BUFFER = 1000;
 
     public static void init() {
         for (int i = 0; i < NUMBER_OF_THREAD; i++) {
