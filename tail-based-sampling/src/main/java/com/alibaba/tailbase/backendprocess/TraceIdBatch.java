@@ -8,6 +8,7 @@ import java.util.List;
 public class TraceIdBatch {
     private int batchPos = 0;
     private int processCount = 0;
+    private int threadNumber = 0;
     private List<String> traceIdList = new ArrayList<>(Constants.BATCH_SIZE / 10);
 
     public int getBatchPos() {
@@ -30,4 +31,11 @@ public class TraceIdBatch {
         return traceIdList;
     }
 
+    public int getThreadNumber() {
+        return threadNumber;
+    }
+
+    public void setThreadNumber(int threadNumber) {
+        this.threadNumber = threadNumber;
+    }
 }

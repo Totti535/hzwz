@@ -29,17 +29,19 @@ public class ClientProcessData implements Runnable {
     private static final Logger LOGGER = LoggerFactory.getLogger(ClientProcessData.class.getName());
 
     // an list of trace map,like ring buffe.  key is traceId, value is spans ,  r
-    public static List<Map<String,List<String>>> BATCH_TRACE_LIST = new ArrayList<>();
+    public static Map<Integer, List<Map<String, List<String>>>> BATCH_TRACE_LIST = new ConcurrentHashMap<>();
     // make 50 bucket to cache traceData
-    public static int BATCH_COUNT = 15;
+    public static int BATCH_COUNT = 8;
 
     private static int OVERLAP_BUFFER = 500;
 
-    public static Map<Integer, Integer> batchProcessMap = new ConcurrentHashMap<>();
-
-    public static  void init() {
-        for (int i = 0; i < BATCH_COUNT; i++) {
-            BATCH_TRACE_LIST.add(new ConcurrentHashMap<>(Constants.BATCH_SIZE));
+    public static void init() {
+        for (int i = 0; i < NUMBER_OF_THREAD; i++) {
+            List<Map<String, List<String>>> list = new ArrayList<>();
+            for (int j = 0; j < BATCH_COUNT; j++) {
+                list.add(new ConcurrentHashMap<>(Constants.BATCH_SIZE));
+            }
+            BATCH_TRACE_LIST.put(i, list);
         }
     }
 
@@ -55,7 +57,8 @@ public class ClientProcessData implements Runnable {
 
             long dataSize = getSourceDataSize();
             List<InputStream> inputStreams = new ArrayList<>();
-            List<BufferedReader> bufferedReaders = new ArrayList<>();;
+            List<BufferedReader> bufferedReaders = new ArrayList<>();
+            ;
             long partSize = dataSize / NUMBER_OF_THREAD;
 
             for (int i = 0; i < NUMBER_OF_THREAD; i++) {
@@ -79,9 +82,11 @@ public class ClientProcessData implements Runnable {
             ExecutorService threadPool = Executors.newFixedThreadPool(NUMBER_OF_THREAD);
             List<Future<?>> futures = new ArrayList<>();
 
+            int threadNumber = 0;
             for (BufferedReader bf : bufferedReaders) {
-                Future<?> future = threadPool.submit(new ClientDataThread(bf, partSize + OVERLAP_BUFFER));
+                Future<?> future = threadPool.submit(new ClientDataThread(threadNumber, bf, partSize + OVERLAP_BUFFER));
                 futures.add(future);
+                threadNumber ++;
             }
 
             for (Future<?> future : futures) {
@@ -116,31 +121,32 @@ public class ClientProcessData implements Runnable {
     }
 
 
-    public static String getWrongTracing(String wrongTraceIdList, int batchPos) {
-        LOGGER.info(String.format("getWrongTracing, batchPos:%d, wrongTraceIdList:\n %s" ,
+    public static String getWrongTracing(String wrongTraceIdList, int batchPos, int threadNumber) {
+        LOGGER.info(String.format("getWrongTracing, batchPos:%d, wrongTraceIdList:\n %s",
                 batchPos, wrongTraceIdList));
-        List<String> traceIdList = JSON.parseObject(wrongTraceIdList, new TypeReference<List<String>>(){});
-        Map<String,List<String>> wrongTraceMap = new HashMap<>();
+        List<String> traceIdList = JSON.parseObject(wrongTraceIdList, new TypeReference<List<String>>() {
+        });
+        Map<String, List<String>> wrongTraceMap = new HashMap<>();
         int pos = batchPos % BATCH_COUNT;
         int previous = pos - 1;
         if (previous == -1) {
-            previous = BATCH_COUNT -1;
+            previous = BATCH_COUNT - 1;
         }
         int next = pos + 1;
         if (next == BATCH_COUNT) {
             next = 0;
         }
-        getWrongTraceWithBatch(previous, pos, traceIdList, wrongTraceMap);
-        getWrongTraceWithBatch(pos, pos, traceIdList,  wrongTraceMap);
-        getWrongTraceWithBatch(next, pos, traceIdList, wrongTraceMap);
+        getWrongTraceWithBatch(previous, pos, traceIdList, wrongTraceMap, threadNumber);
+        getWrongTraceWithBatch(pos, pos, traceIdList, wrongTraceMap, threadNumber);
+        getWrongTraceWithBatch(next, pos, traceIdList, wrongTraceMap, threadNumber);
         // to clear spans, don't block client process thread. TODO to use lock/notify
-        BATCH_TRACE_LIST.get(previous).clear();
+        BATCH_TRACE_LIST.get(threadNumber).get(previous).clear();
         return JSON.toJSONString(wrongTraceMap);
     }
 
-    private static void getWrongTraceWithBatch(int batchPos, int pos,  List<String> traceIdList, Map<String,List<String>> wrongTraceMap) {
+    private static void getWrongTraceWithBatch(int batchPos, int pos, List<String> traceIdList, Map<String, List<String>> wrongTraceMap, int threadNumber) {
         // donot lock traceMap,  traceMap may be clear anytime.
-        Map<String, List<String>> traceMap = BATCH_TRACE_LIST.get(batchPos);
+        Map<String, List<String>> traceMap = BATCH_TRACE_LIST.get(threadNumber).get(batchPos);
         for (String traceId : traceIdList) {
             List<String> spanList = traceMap.get(traceId);
             if (spanList != null) {
@@ -153,17 +159,17 @@ public class ClientProcessData implements Runnable {
                 }
                 // output spanlist to check
                 String spanListString = spanList.stream().collect(Collectors.joining("\n"));
-                LOGGER.info(String.format("getWrongTracing, batchPos:%d, pos:%d, traceId:%s, spanList:\n %s",
-                        batchPos, pos,  traceId, spanListString));
+                LOGGER.info(String.format("getWrongTracing, batchPos:%d, pos:%d, traceId:%s, threadNumber: %s, spanList:\n %s",
+                        batchPos, pos, traceId, threadNumber, spanListString));
             }
         }
     }
 
-    private String getPath(){
+    private String getPath() {
         String port = System.getProperty("server.port", "8080");
         if ("8000".equals(port)) {
             return "http://localhost:" + CommonController.getDataSourcePort() + "/trace1.data";
-        } else if ("8001".equals(port)){
+        } else if ("8001".equals(port)) {
             return "http://localhost:" + CommonController.getDataSourcePort() + "/trace2.data";
         } else {
             return null;
@@ -228,7 +234,7 @@ public class ClientProcessData implements Runnable {
             LOGGER.info("data path:" + path);
             HttpURLConnection httpConnection = (HttpURLConnection) url.openConnection(Proxy.NO_PROXY);
             if (!isLast) {
-                httpConnection.setRequestProperty("Range", String.format("bytes=%s-%s",start, end));
+                httpConnection.setRequestProperty("Range", String.format("bytes=%s-%s", start, end));
             } else {
                 httpConnection.setRequestProperty("Range", String.format("bytes=%s-", start));
             }

@@ -52,7 +52,7 @@ public class CheckSumService implements Runnable{
                     // to get all spans from remote
                     for (String port : ports) {
                         Map<String, List<String>> processMap =
-                                getWrongTrace(JSON.toJSONString(traceIdBatch.getTraceIdList()), port, batchPos);
+                                getWrongTrace(JSON.toJSONString(traceIdBatch.getTraceIdList()), port, batchPos, traceIdBatch.getThreadNumber());
                         if (processMap != null) {
                             for (Map.Entry<String, List<String>> entry : processMap.entrySet()) {
                                 String traceId = entry.getKey();
@@ -105,10 +105,13 @@ public class CheckSumService implements Runnable{
      * @param batchPos
      * @return
      */
-    private Map<String,List<String>>  getWrongTrace(@RequestParam String traceIdList, String port, int batchPos) {
+    private Map<String,List<String>>  getWrongTrace(@RequestParam String traceIdList, String port, int batchPos, int threadNumber) {
         try {
             RequestBody body = new FormBody.Builder()
-                    .add("traceIdList", traceIdList).add("batchPos", batchPos + "").build();
+                    .add("traceIdList", traceIdList)
+                    .add("batchPos", batchPos + "")
+                    .add("threadNumber", threadNumber + "")
+                    .build();
             String url = String.format("http://localhost:%s/getWrongTrace", port);
             Request request = new Request.Builder().url(url).post(body).build();
             Response response = Utils.callHttp(request);
@@ -117,7 +120,7 @@ public class CheckSumService implements Runnable{
             response.close();
             return resultMap;
         } catch (Exception e) {
-            LOGGER.warn("fail to getWrongTrace, json:" + traceIdList + ",batchPos:" + batchPos, e);
+            LOGGER.warn("fail to getWrongTrace, json:" + traceIdList + ",batchPos:" + batchPos + "threadNumber: " + threadNumber, e);
         }
         return null;
     }

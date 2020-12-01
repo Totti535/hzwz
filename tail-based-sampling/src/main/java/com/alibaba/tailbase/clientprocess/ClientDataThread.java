@@ -22,11 +22,14 @@ public class ClientDataThread extends Thread {
 
     public static final Object lock = new Object();
 
+    private int threadNumber;
+
     private BufferedReader bf;
 
     private long partSize;
 
-    public ClientDataThread(BufferedReader bf, long partSize) {
+    public ClientDataThread(int threadNumber, BufferedReader bf, long partSize) {
+        this.threadNumber = threadNumber;
         this.bf = bf;
         this.partSize = partSize;
     }
@@ -45,7 +48,7 @@ public class ClientDataThread extends Thread {
                 byteRead += line.getBytes().length;
                 count++;
 
-                Map<String, List<String>> traceMap = ClientProcessData.BATCH_TRACE_LIST.get(pos);
+                Map<String, List<String>> traceMap = ClientProcessData.BATCH_TRACE_LIST.get(threadNumber).get(pos);
                 String[] cols = line.split("\\|");
                 if (cols != null && cols.length > 1) {
                     String traceId = cols[0];
@@ -72,7 +75,7 @@ public class ClientDataThread extends Thread {
                     if (pos >= ClientProcessData.BATCH_COUNT) {
                         pos = 0;
                     }
-                    traceMap = ClientProcessData.BATCH_TRACE_LIST.get(pos);
+                    traceMap = ClientProcessData.BATCH_TRACE_LIST.get(threadNumber).get(pos);
                     // donot produce data, wait backend to consume data
                     // TODO to use lock/notify
                     if (traceMap.size() > 0) {
@@ -84,11 +87,11 @@ public class ClientDataThread extends Thread {
                         }
                     }
                     int batchPos = (int) count / Constants.BATCH_SIZE - 1;
-                    updateWrongTraceId(badTraceIdList, batchPos);
+                    updateWrongTraceId(badTraceIdList, batchPos, threadNumber);
                     badTraceIdList.clear();
                 }
             }
-            updateWrongTraceId(badTraceIdList, (int) count / Constants.BATCH_SIZE - 1);
+            updateWrongTraceId(badTraceIdList, (int) count / Constants.BATCH_SIZE - 1, threadNumber);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -100,19 +103,21 @@ public class ClientDataThread extends Thread {
      * @param badTraceIdList
      * @param batchPos
      */
-    private void updateWrongTraceId(Set<String> badTraceIdList, int batchPos) {
+    private void updateWrongTraceId(Set<String> badTraceIdList, int batchPos, int threadNumber) {
         String json = JSON.toJSONString(badTraceIdList);
         if (badTraceIdList.size() > 0) {
             try {
                 LOGGER.info("updateBadTraceId, json:" + json + ", batch:" + batchPos);
                 RequestBody body = new FormBody.Builder()
-                        .add("traceIdListJson", json).add("batchPos", batchPos + "").build();
+                        .add("traceIdListJson", json)
+                        .add("batchPos", batchPos + "")
+                        .add("threadNumber", threadNumber + "") .build();
                 Request request = new Request.Builder().url("http://localhost:8002/setWrongTraceId").post(body).build();
                 Response response = Utils.callHttp(request);
                 response.close();
-                LOGGER.info("suc to updateBadTraceId, batchPos:" + batchPos);
+                LOGGER.info("suc to updateBadTraceId, batchPos:" + batchPos + "thread number:" + threadNumber);
             } catch (Exception e) {
-                LOGGER.warn("fail to updateBadTraceId, json:" + json + ", batch:" + batchPos);
+                LOGGER.warn("fail to updateBadTraceId, json:" + json + ", batch:" + batchPos + "thread number:" + threadNumber);
             }
         }
     }
