@@ -1,9 +1,6 @@
 package com.alibaba.tailbase;
 
-import okhttp3.Call;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
+import okhttp3.*;
 
 import java.io.IOException;
 import java.security.MessageDigest;
@@ -12,8 +9,10 @@ import java.util.concurrent.TimeUnit;
 public class Utils {
 
     private final static OkHttpClient OK_HTTP_CLIENT = new OkHttpClient.Builder()
-            .connectTimeout(50L,TimeUnit.SECONDS)
-                        .readTimeout(60L, TimeUnit.SECONDS)
+            .connectTimeout(600L,TimeUnit.SECONDS)
+                        .readTimeout(600L, TimeUnit.SECONDS)
+                        .writeTimeout(600L, TimeUnit.SECONDS)
+                        .connectionPool(new ConnectionPool(5, 600, TimeUnit.SECONDS))
                         .build();
 
     public static Response callHttp(Request request) throws IOException {
