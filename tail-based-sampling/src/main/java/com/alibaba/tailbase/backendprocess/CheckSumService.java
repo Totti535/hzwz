@@ -12,18 +12,19 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
 import static com.alibaba.tailbase.Constants.CLIENT_PROCESS_PORT1;
 import static com.alibaba.tailbase.Constants.CLIENT_PROCESS_PORT2;
 
-public class CheckSumService implements Runnable{
+public class CheckSumService implements Runnable {
 
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ClientProcessData.class.getName());
 
     // save chuckSum for the total wrong trace
-    private static Map<String, String> TRACE_CHUCKSUM_MAP= new ConcurrentHashMap<>();
+    private static Map<String, String> TRACE_CHUCKSUM_MAP = new ConcurrentHashMap<>();
 
     public static void start() {
         Thread t = new Thread(new CheckSumService(), "CheckSumServiceThread");
@@ -32,12 +33,12 @@ public class CheckSumService implements Runnable{
 
     @Override
     public void run() {
-        TraceIdBatch traceIdBatch = null;
+        List<TraceIdBatch> traceIdBatchs = new ArrayList<>();
         String[] ports = new String[]{CLIENT_PROCESS_PORT1, CLIENT_PROCESS_PORT2};
         while (true) {
             try {
-                traceIdBatch = BackendController.getFinishedBatch();
-                if (traceIdBatch == null) {
+                traceIdBatchs = BackendController.getFinishedBatch();
+                if (traceIdBatchs.isEmpty()) {
                     // send checksum when client process has all finished.
                     if (BackendController.isFinished()) {
                         if (sendCheckSum()) {
@@ -46,28 +47,39 @@ public class CheckSumService implements Runnable{
                     }
                     continue;
                 }
-                Map<String, Set<String>> map = new HashMap<>();
-               // if (traceIdBatch.getTraceIdList().size() > 0) {
-                    int batchPos = traceIdBatch.getBatchPos();
-                    // to get all spans from remote
-                    for (String port : ports) {
-                        Map<String, List<String>> processMap =
-                                getWrongTrace(JSON.toJSONString(traceIdBatch.getTraceIdList()), port, batchPos, traceIdBatch.getThreadNumber());
-                        if (processMap != null) {
-                            for (Map.Entry<String, List<String>> entry : processMap.entrySet()) {
-                                String traceId = entry.getKey();
-                                Set<String> spanSet = map.get(traceId);
-                                if (spanSet == null) {
-                                    spanSet = new HashSet<>();
-                                    map.put(traceId, spanSet);
-                                }
-                                spanSet.addAll(entry.getValue());
-                            }
-                        }
-                    }
-                    LOGGER.info("getWrong:" + batchPos + ", traceIdsize:" + traceIdBatch.getTraceIdList().size() + ",result:" + map.size());
-               // }
 
+                CountDownLatch cdl = new CountDownLatch(traceIdBatchs.size());
+                Map<String, Set<String>> map = new ConcurrentHashMap<>();
+                for (TraceIdBatch traceIdBatch : traceIdBatchs) {
+                    Thread thread = new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            // if (traceIdBatch.getTraceIdList().size() > 0) {
+                            int batchPos = traceIdBatch.getBatchPos();
+                            // to get all spans from remote
+                            for (String port : ports) {
+                                Map<String, List<String>> processMap =
+                                        getWrongTrace(JSON.toJSONString(traceIdBatch.getTraceIdList()), port, batchPos, traceIdBatch.getThreadNumber());
+                                if (processMap != null) {
+                                    for (Map.Entry<String, List<String>> entry : processMap.entrySet()) {
+                                        String traceId = entry.getKey();
+                                        Set<String> spanSet = map.get(traceId);
+                                        if (spanSet == null) {
+                                            spanSet = new HashSet<>();
+                                            map.put(traceId, spanSet);
+                                        }
+                                        spanSet.addAll(entry.getValue());
+                                    }
+                                }
+                            }
+                            LOGGER.info("getWrong:" + batchPos + ", traceIdsize:" + traceIdBatch.getTraceIdList().size() + ",result:" + map.size());
+                            cdl.countDown();
+                        }
+                    });
+                    thread.start();
+                }
+
+                cdl.await();
                 for (Map.Entry<String, Set<String>> entry : map.entrySet()) {
                     String traceId = entry.getKey();
                     Set<String> spanSet = entry.getValue();
@@ -76,18 +88,14 @@ public class CheckSumService implements Runnable{
                             Comparator.comparing(CheckSumService::getStartTime)).collect(Collectors.joining("\n"));
                     spans = spans + "\n";
                     // output all span to check
-                   // LOGGER.info("traceId:" + traceId + ",value:\n" + spans);
+                    // LOGGER.info("traceId:" + traceId + ",value:\n" + spans);
                     TRACE_CHUCKSUM_MAP.put(traceId, Utils.MD5(spans));
                 }
+
             } catch (Exception e) {
-                // record batchPos when an exception  occurs.
-                int batchPos = 0;
-                if (traceIdBatch != null) {
-                    batchPos = traceIdBatch.getBatchPos();
-                }
-                LOGGER.warn(String.format("fail to getWrongTrace, batchPos:%d", batchPos), e);
+                LOGGER.warn("fail to getWrongTrace", e);
             } finally {
-                if (traceIdBatch == null) {
+                if (traceIdBatchs.isEmpty()) {
                     try {
                         Thread.sleep(10);
                     } catch (Throwable e) {
@@ -100,12 +108,13 @@ public class CheckSumService implements Runnable{
 
     /**
      * call client process, to get all spans of wrong traces.
+     *
      * @param traceIdList
      * @param port
      * @param batchPos
      * @return
      */
-    private Map<String,List<String>>  getWrongTrace(@RequestParam String traceIdList, String port, int batchPos, int threadNumber) {
+    private Map<String, List<String>> getWrongTrace(@RequestParam String traceIdList, String port, int batchPos, int threadNumber) {
         try {
             RequestBody body = new FormBody.Builder()
                     .add("traceIdList", traceIdList)
@@ -115,8 +124,9 @@ public class CheckSumService implements Runnable{
             String url = String.format("http://localhost:%s/getWrongTrace", port);
             Request request = new Request.Builder().url(url).post(body).build();
             Response response = Utils.callHttp(request);
-            Map<String,List<String>> resultMap = JSON.parseObject(response.body().string(),
-                    new TypeReference<Map<String, List<String>>>() {});
+            Map<String, List<String>> resultMap = JSON.parseObject(response.body().string(),
+                    new TypeReference<Map<String, List<String>>>() {
+                    });
             response.close();
             return resultMap;
         } catch (Exception e) {

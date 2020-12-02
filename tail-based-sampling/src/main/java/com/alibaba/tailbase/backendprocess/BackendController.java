@@ -97,7 +97,8 @@ public class BackendController {
      *
      * @return
      */
-    public static TraceIdBatch getFinishedBatch() {
+    public static List<TraceIdBatch> getFinishedBatch() {
+        List<TraceIdBatch> traceIdBatches = new ArrayList<>();
         for (Map.Entry<Integer, List<TraceIdBatch>> entry : TRACEID_BATCH_LIST.entrySet()) {
             int next = CURRENT_BATCH.get(entry.getKey()) + 1;
             if (next >= BATCH_COUNT) {
@@ -114,10 +115,10 @@ public class BackendController {
 
                 entry.getValue().set(CURRENT_BATCH.get(entry.getKey()), newTraceIdBatch);
                 CURRENT_BATCH.put(entry.getKey(), next);
-                return currentBatch;
+                traceIdBatches.add(currentBatch);
             }
         }
-        return null;
+        return traceIdBatches;
     }
 
 }
