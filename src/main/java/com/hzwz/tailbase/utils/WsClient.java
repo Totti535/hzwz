@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 import java.util.concurrent.ExecutionException;
 
 /**
- * @author 杨丰畅
  * @description 建立与 backend 的 websocket 连接
  * @date 2020/5/14 20:19
  **/

@@ -1,7 +1,6 @@
 package com.hzwz.tailbase;
 
 /**
- * @author 杨丰畅
  * @description 常量池
  * @date 2020/5/22 21:34
  **/

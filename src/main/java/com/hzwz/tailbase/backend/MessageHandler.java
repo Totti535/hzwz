@@ -30,7 +30,6 @@ import java.util.stream.Collectors;
 import static com.hzwz.tailbase.backend.PullDataService.resMap;
 
 /**
- * @author 杨丰畅
  * @description 处理 websocket 信息
  * @date 2020/5/16 19:39
  **/

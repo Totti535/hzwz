@@ -23,7 +23,6 @@ import java.net.InetSocketAddress;
 /**
  * <p>application starter</p>
  *
- * @author : chengyi
  * @date : 2020-06-11 20:35
  **/
 

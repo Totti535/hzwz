@@ -18,7 +18,6 @@ import java.util.Map;
 import java.util.concurrent.*;
 
 /**
- * @author 杨丰畅
  * @description 从阻塞队列中获取消费对象，用于向 client 发出拉起数据请求的线程
  * @date 2020/5/22 23:41
  **/

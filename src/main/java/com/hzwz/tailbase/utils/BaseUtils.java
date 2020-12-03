@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 /**
- * @author 杨丰畅
  * @description 基本工具类
  * @date 2020/5/22 21:33
  **/

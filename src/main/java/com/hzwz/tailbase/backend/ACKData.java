@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * @author 杨丰畅
  * @description 用于暂时储存收到的trace detail
  * @date 2020/5/23 14:17
  **/

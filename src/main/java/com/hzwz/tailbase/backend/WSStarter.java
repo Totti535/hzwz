@@ -15,7 +15,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @author 杨丰畅
  * @description 启动 websocket 服务
  * @date 2020/5/16 19:25
  **/

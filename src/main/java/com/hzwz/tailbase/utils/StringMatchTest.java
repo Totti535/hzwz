@@ -11,7 +11,6 @@ import static com.hzwz.tailbase.Constants.standardBytes;
 /**
  * <p></p>
  *
- * @author : chengyi
  * @date : 2020-06-23 00:18
  **/
 public class StringMatchTest {

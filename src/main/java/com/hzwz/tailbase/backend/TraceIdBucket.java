@@ -7,7 +7,6 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * @author 杨丰畅
  * @description 暂存错误的traceId，用于向client拉取具体数据
  * @date 2020/5/22 23:21
  **/

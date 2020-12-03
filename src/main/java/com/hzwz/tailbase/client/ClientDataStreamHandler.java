@@ -25,7 +25,6 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * @author 杨丰畅
  * @description client 端用于处理读入数据流，向 backend 发送对应请求的类
  * @date 2020/5/5 12:47
  **/

@@ -7,7 +7,6 @@ import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 
 /**
- * @author 杨丰畅
  * @description 超时心跳检测
  * @date 2020/5/16 19:42
  **/
