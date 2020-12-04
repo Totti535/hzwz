@@ -8,7 +8,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.ComponentScan;
 
 @EnableAutoConfiguration
-@ComponentScan(basePackages = "com.alibaba.tailbase")
+@ComponentScan(basePackages = "com.hzwz.tailbase")
 public class MultiEntry {
 
 
