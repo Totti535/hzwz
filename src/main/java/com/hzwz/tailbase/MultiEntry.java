@@ -2,6 +2,7 @@ package com.hzwz.tailbase;
 
 import com.hzwz.tailbase.backendprocess.BackendController;
 import com.hzwz.tailbase.backendprocess.CheckSumService;
+import com.hzwz.tailbase.backendprocess.TraceHandlingService;
 import com.hzwz.tailbase.clientprocess.ClientProcessData;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -16,6 +17,7 @@ public class MultiEntry {
         if (Utils.isBackendProcess()) {
             BackendController.init();
             CheckSumService.start();
+            TraceHandlingService.start();
         }
         if (Utils.isClientProcess()) {
             ClientProcessData.init();

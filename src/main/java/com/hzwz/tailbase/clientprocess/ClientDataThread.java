@@ -9,6 +9,7 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import redis.clients.jedis.Jedis;
 
 import java.io.BufferedReader;
 import java.util.*;
@@ -25,6 +26,10 @@ public class ClientDataThread extends Thread {
     private BufferedReader bf;
 
     private long partSize;
+
+    private Jedis jedis = new Jedis("localhost", 8003);
+
+    private String port = System.getProperty("server.port", "8080");
 
     public ClientDataThread(int threadNumber, BufferedReader bf, long partSize) {
         this.threadNumber = threadNumber;
@@ -85,11 +90,14 @@ public class ClientDataThread extends Thread {
                         }
                     }
                     int batchPos = (int) count / Constants.BATCH_SIZE - 1;
-                    updateWrongTraceId(badTraceIdList, batchPos, threadNumber);
+                    //updateWrongTraceId(badTraceIdList, batchPos, threadNumber);
+
+                    updateWrongTraceIdRedis(badTraceIdList, batchPos, threadNumber);
                     badTraceIdList.clear();
                 }
             }
-            updateWrongTraceId(badTraceIdList, (int) count / Constants.BATCH_SIZE - 1, threadNumber);
+            //updateWrongTraceId(badTraceIdList, (int) count / Constants.BATCH_SIZE - 1, threadNumber);
+            updateWrongTraceIdRedis(badTraceIdList, (int) count / Constants.BATCH_SIZE - 1, threadNumber);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -116,6 +124,20 @@ public class ClientDataThread extends Thread {
                 LOGGER.info("suc to updateBadTraceId, batchPos:" + batchPos + "thread number:" + threadNumber);
             } catch (Exception e) {
                 LOGGER.warn("fail to updateBadTraceId, json:" + json + ", batch:" + batchPos + "thread number:" + threadNumber);
+            }
+        }
+    }
+
+    private void updateWrongTraceIdRedis(Set<String> badTraceIdList, int batchPos, int threadNumber) {
+        String json = JSON.toJSONString(badTraceIdList);
+        String redisKey = "wrong_trace_id";
+
+        while (true) {
+            if (jedis.setnx(Constants.REDIS_LOCK, Thread.currentThread().getName() + port) == 0) {
+
+                String key = String.format("%s|%s|%s", batchPos, threadNumber, port);
+                jedis.hset(redisKey, key, json);
+                break;
             }
         }
     }

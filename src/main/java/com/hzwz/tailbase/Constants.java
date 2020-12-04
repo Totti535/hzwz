@@ -10,4 +10,5 @@ public class Constants {
     public static int BATCH_SIZE = 20000;
     public static int PROCESS_COUNT = 2;
     public static int NUMBER_OF_THREAD = 2;
+    public static String REDIS_LOCK = "RedisLock";
 }

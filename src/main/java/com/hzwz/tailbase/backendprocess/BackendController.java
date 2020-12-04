@@ -26,8 +26,8 @@ public class BackendController {
     private static Map<Integer, Integer> CURRENT_BATCH = new ConcurrentHashMap<>();
 
     // save 90 batch for wrong trace
-    private static int BATCH_COUNT = 90;
-    private static Map<Integer, List<TraceIdBatch>> TRACEID_BATCH_LIST = new HashMap<>();
+    public static int BATCH_COUNT = 90;
+    public static Map<Integer, List<TraceIdBatch>> TRACEID_BATCH_LIST = new ConcurrentHashMap<>();
 
     public static void init() {
         for (int i = 0; i < Constants.NUMBER_OF_THREAD; i++) {
