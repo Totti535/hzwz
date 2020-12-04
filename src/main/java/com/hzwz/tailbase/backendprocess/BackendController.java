@@ -120,7 +120,7 @@ public class BackendController {
                 CURRENT_BATCH.put(entry.getKey(), next);
                 traceIdBatches.add(currentBatch);
 
-                //jedis.rpush(WRONG_TRACE_BATCH, JSON.toJSONString(currentBatch));
+                jedis.rpush(WRONG_TRACE_BATCH, JSON.toJSONString(currentBatch));
             }
         }
 

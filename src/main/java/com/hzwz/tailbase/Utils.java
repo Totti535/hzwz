@@ -21,10 +21,8 @@ public class Utils {
         return call.execute();
     }
 
-    private final static Jedis jedis = new Jedis("localhost", 8003);
-
     public static Jedis getJedis() {
-        return jedis;
+        return new Jedis("localhost", 8003);
     }
 
     public static long toLong(String str, long defaultValue) {
