@@ -72,7 +72,8 @@ public class CheckSumService implements Runnable {
                                     }
                                 }
                             }
-                            LOGGER.info("getWrong:" + batchPos + ", traceIdsize:" + traceIdBatch.getTraceIdList().size() + ",result:" + map.size());
+                            LOGGER.info(String.format("getWrong batchPos: %s, thread number: %s, traceIdsize: %s, result: %s",
+                                    batchPos, traceIdBatch.getThreadNumber(), traceIdBatch.getTraceIdList().size(), map.size()));
                             cdl.countDown();
                         }
                     });

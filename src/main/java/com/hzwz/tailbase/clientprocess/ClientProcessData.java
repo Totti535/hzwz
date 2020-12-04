@@ -5,6 +5,7 @@ import com.alibaba.fastjson.TypeReference;
 import com.hzwz.tailbase.CommonController;
 import com.hzwz.tailbase.Constants;
 import com.hzwz.tailbase.Utils;
+import com.hzwz.tailbase.backendprocess.TraceIdBatch;
 import okhttp3.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -86,7 +87,7 @@ public class ClientProcessData implements Runnable {
             for (BufferedReader bf : bufferedReaders) {
                 Future<?> future = threadPool.submit(new ClientDataThread(threadNumber, bf, partSize + OVERLAP_BUFFER));
                 futures.add(future);
-                threadNumber ++;
+                threadNumber++;
             }
 
             for (Future<?> future : futures) {
@@ -122,10 +123,36 @@ public class ClientProcessData implements Runnable {
 
 
     public static String getWrongTracing(String wrongTraceIdList, int batchPos, int threadNumber) {
-        LOGGER.info(String.format("getWrongTracing, batchPos:%d, wrongTraceIdList:\n %s",
-                batchPos, wrongTraceIdList));
+        LOGGER.info(String.format("getWrongTracing, batchPos:%d, threadNumber: %s", batchPos, threadNumber));
+
         List<String> traceIdList = JSON.parseObject(wrongTraceIdList, new TypeReference<List<String>>() {
         });
+        Map<String, List<String>> wrongTraceMap = new HashMap<>();
+        int pos = batchPos % BATCH_COUNT;
+        int previous = pos - 1;
+        if (previous == -1) {
+            previous = BATCH_COUNT - 1;
+        }
+        int next = pos + 1;
+        if (next == BATCH_COUNT) {
+            next = 0;
+        }
+        getWrongTraceWithBatch(previous, pos, traceIdList, wrongTraceMap, threadNumber);
+        getWrongTraceWithBatch(pos, pos, traceIdList, wrongTraceMap, threadNumber);
+        getWrongTraceWithBatch(next, pos, traceIdList, wrongTraceMap, threadNumber);
+        // to clear spans, don't block client process thread. TODO to use lock/notify
+        BATCH_TRACE_LIST.get(threadNumber).get(previous).clear();
+        return JSON.toJSONString(wrongTraceMap);
+    }
+
+    public static String getWrongTracing(TraceIdBatch traceIdBatch) {
+
+        int batchPos = traceIdBatch.getBatchPos();
+        int threadNumber = traceIdBatch.getThreadNumber();
+        List<String> traceIdList = traceIdBatch.getTraceIdList();
+
+        LOGGER.info(String.format("getWrongTracing, batchPos:%d, threadNumber: %s", batchPos, threadNumber));
+
         Map<String, List<String>> wrongTraceMap = new HashMap<>();
         int pos = batchPos % BATCH_COUNT;
         int previous = pos - 1;
@@ -157,10 +184,6 @@ public class ClientProcessData implements Runnable {
                 } else {
                     wrongTraceMap.put(traceId, spanList);
                 }
-                // output spanlist to check
-                String spanListString = spanList.stream().collect(Collectors.joining("\n"));
-                LOGGER.info(String.format("getWrongTracing, batchPos:%d, pos:%d, traceId:%s, threadNumber: %s, spanList:\n %s",
-                        batchPos, pos, traceId, threadNumber, spanListString));
             }
         }
     }
