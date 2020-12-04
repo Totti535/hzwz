@@ -98,7 +98,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>com.hzwz.tailbase.MainStarter</mainClass>
+                            <mainClass>com.hzwz.tailbase.MultiEntry</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>

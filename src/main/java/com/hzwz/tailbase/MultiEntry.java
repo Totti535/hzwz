@@ -26,8 +26,8 @@ import java.net.InetSocketAddress;
  * @date : 2020-06-11 20:35
  **/
 
-public class MainStarter {
-    private static final Logger logger = LoggerFactory.getLogger(MainStarter.class);
+public class MultiEntry {
+    private static final Logger logger = LoggerFactory.getLogger(MultiEntry.class);
     private static String port;
 
     public static void main(String[] args) {
@@ -47,7 +47,7 @@ public class MainStarter {
             // *info("数据客户端已在 {} 端口启动......", port);
         }
         // start this application
-        MainStarter.start();
+        MultiEntry.start();
     }
 
     private static void start() {
