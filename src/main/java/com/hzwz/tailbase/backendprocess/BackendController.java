@@ -46,7 +46,8 @@ public class BackendController {
             CURRENT_BATCH.put(i, 0);
         }
 
-        jedis.del(WRONG_TRACE_BATCH);
+        jedis.del(WRONG_TRACE_BATCH_8000);
+        jedis.del(WRONG_TRACE_BATCH_8001);
         jedis.del(WRONG_TRACE_DATA);
     }
 
@@ -123,7 +124,8 @@ public class BackendController {
                 CURRENT_BATCH.put(entry.getKey(), next);
                 traceIdBatches.add(currentBatch);
 
-                jedis.rpush(WRONG_TRACE_BATCH, JSON.toJSONString(currentBatch));
+                jedis.rpush(WRONG_TRACE_BATCH_8000, JSON.toJSONString(currentBatch));
+                jedis.rpush(WRONG_TRACE_BATCH_8001, JSON.toJSONString(currentBatch));
             }
         }
 

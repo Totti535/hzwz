@@ -7,6 +7,7 @@ com\hzwz\tailbase\Utils.class
 com\hzwz\tailbase\backendprocess\CheckSumService$1.class
 com\hzwz\tailbase\clientprocess\ClientController.class
 com\hzwz\tailbase\clientprocess\ClientProcessData.class
+com\hzwz\tailbase\clientprocess\ClientDataSendingThread$1.class
 com\hzwz\tailbase\backendprocess\TraceHandlingService$1.class
 com\hzwz\tailbase\backendprocess\TraceHandlingService.class
 com\hzwz\tailbase\clientprocess\ClientProcessData$1.class

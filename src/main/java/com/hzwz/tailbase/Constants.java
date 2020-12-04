@@ -13,6 +13,8 @@ public class Constants {
     public static String REDIS_LOCK = "RedisLock";
     public static String REDIS_LOCK_DATA = "RedisLockData";
     public static final String WRONG_TRACE_ID = "wrong_trace_id";
-    public static final String WRONG_TRACE_BATCH = "wrong_trace_batch";
+    public static final String WRONG_TRACE_BATCH_8000 = "wrong_trace_batch_8000";
+    public static final String WRONG_TRACE_BATCH_8001 = "wrong_trace_batch_8001";
+    public static final String WRONG_TRACE_BATCH = "wrong_trace_batch_";
     public static final String WRONG_TRACE_DATA = "wrong_trace_data";
 }

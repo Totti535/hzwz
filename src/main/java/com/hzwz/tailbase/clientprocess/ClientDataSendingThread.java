@@ -32,13 +32,14 @@ public class ClientDataSendingThread implements Runnable {
     }
 
     private String port = System.getProperty("server.port", "8080");
+    private String redisKey =  WRONG_TRACE_BATCH + port;
 
     @Override
     public void run() {
         String traceIdBatchJson;
         while (true) {
-            if (jedis.llen(WRONG_TRACE_BATCH) > 0) {
-                traceIdBatchJson = jedis.lpop(WRONG_TRACE_BATCH);
+            if (jedis.llen(redisKey) > 0) {
+                traceIdBatchJson = jedis.lpop(redisKey);
                 TraceIdBatch traceIdBatch = JSON.parseObject(traceIdBatchJson, new TypeReference<TraceIdBatch>() {
                 });
 
