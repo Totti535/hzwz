@@ -11,6 +11,8 @@ public class Constants {
     public static int PROCESS_COUNT = 2;
     public static int NUMBER_OF_THREAD = 1;
     public static String REDIS_LOCK = "RedisLock";
+    public static String REDIS_LOCK_DATA = "RedisLockData";
     public static final String WRONG_TRACE_ID = "wrong_trace_id";
     public static final String WRONG_TRACE_BATCH = "wrong_trace_batch";
+    public static final String WRONG_TRACE_DATA = "wrong_trace_data";
 }

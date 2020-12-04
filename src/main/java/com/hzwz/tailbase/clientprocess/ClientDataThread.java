@@ -138,6 +138,7 @@ public class ClientDataThread extends Thread {
                 String key = String.format("%s|%s|%s", batchPos, threadNumber, port);
                 jedis.hset(redisKey, key, json);
 
+                LOGGER.info(String.format("set wrong trace id, batchPos: %s, threadNumber: %s, port: %s", batchPos, threadNumber, port));
                 jedis.del(Constants.REDIS_LOCK);
                 break;
             }

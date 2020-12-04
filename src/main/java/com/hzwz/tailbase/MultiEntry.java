@@ -3,6 +3,7 @@ package com.hzwz.tailbase;
 import com.hzwz.tailbase.backendprocess.BackendController;
 import com.hzwz.tailbase.backendprocess.CheckSumService;
 import com.hzwz.tailbase.backendprocess.TraceHandlingService;
+import com.hzwz.tailbase.clientprocess.ClientDataSendingThread;
 import com.hzwz.tailbase.clientprocess.ClientProcessData;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -21,6 +22,7 @@ public class MultiEntry {
         }
         if (Utils.isClientProcess()) {
             ClientProcessData.init();
+            ClientDataSendingThread.start();
         }
         String port = System.getProperty("server.port", "8080");
         SpringApplication.run(MultiEntry.class,

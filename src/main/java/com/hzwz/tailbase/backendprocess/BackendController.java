@@ -47,6 +47,7 @@ public class BackendController {
         }
 
         jedis.del(WRONG_TRACE_BATCH);
+        jedis.del(WRONG_TRACE_DATA);
     }
 
 

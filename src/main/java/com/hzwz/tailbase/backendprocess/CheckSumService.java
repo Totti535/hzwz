@@ -3,20 +3,21 @@ package com.hzwz.tailbase.backendprocess;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
 import com.hzwz.tailbase.CommonController;
+import com.hzwz.tailbase.Constants;
 import com.hzwz.tailbase.Utils;
 import com.hzwz.tailbase.clientprocess.ClientProcessData;
 import okhttp3.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.RequestParam;
+import redis.clients.jedis.Jedis;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
-import static com.hzwz.tailbase.Constants.CLIENT_PROCESS_PORT1;
-import static com.hzwz.tailbase.Constants.CLIENT_PROCESS_PORT2;
+import static com.hzwz.tailbase.Constants.*;
 
 public class CheckSumService implements Runnable {
 
@@ -25,6 +26,8 @@ public class CheckSumService implements Runnable {
 
     // save chuckSum for the total wrong trace
     private static Map<String, String> TRACE_CHUCKSUM_MAP = new ConcurrentHashMap<>();
+
+    private Jedis jedis = Utils.getJedis();
 
     public static void start() {
         Thread t = new Thread(new CheckSumService(), "CheckSumServiceThread");
@@ -47,7 +50,7 @@ public class CheckSumService implements Runnable {
                     }
                     continue;
                 }
-
+/*
                 CountDownLatch cdl = new CountDownLatch(traceIdBatchs.size());
                 Map<String, Set<String>> map = new ConcurrentHashMap<>();
                 for (TraceIdBatch traceIdBatch : traceIdBatchs) {
@@ -81,6 +84,41 @@ public class CheckSumService implements Runnable {
                 }
 
                 cdl.await();
+ */
+                Map<String, Set<String>> map = new ConcurrentHashMap<>();
+                while (true) {
+                    if (jedis.setnx(Constants.REDIS_LOCK_DATA, Thread.currentThread().getName()) == 1) {
+
+                        Map<String, String> redisMap = jedis.hgetAll(WRONG_TRACE_DATA);
+
+                        if (!redisMap.isEmpty()) {
+                            for (String key : redisMap.keySet()) {
+                                Map<String, List<String>> processMap = JSON.parseObject(redisMap.get(key),
+                                        new TypeReference<Map<String, List<String>>>() {
+                                        });
+
+                                LOGGER.info(String.format("get wrong tracing, key: %s, result: %s", key, processMap.size()));
+
+                                if (processMap != null) {
+                                    for (Map.Entry<String, List<String>> entry : processMap.entrySet()) {
+                                        String traceId = entry.getKey();
+                                        Set<String> spanSet = map.get(traceId);
+                                        if (spanSet == null) {
+                                            spanSet = new HashSet<>();
+                                            map.put(traceId, spanSet);
+                                        }
+                                        spanSet.addAll(entry.getValue());
+                                    }
+                                }
+                            }
+                        }
+
+                        jedis.del(WRONG_TRACE_DATA);
+                        jedis.del(Constants.REDIS_LOCK_DATA);
+                        break;
+                    }
+                }
+
                 for (Map.Entry<String, Set<String>> entry : map.entrySet()) {
                     String traceId = entry.getKey();
                     Set<String> spanSet = entry.getValue();
