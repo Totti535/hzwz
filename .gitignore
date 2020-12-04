@@ -23,5 +23,5 @@
 hs_err_pid*
 .idea/
 
-tail-based-sampling/target/
-tail-based-sampling/tailbaseSampling.iml
+/target/
+/tailbaseSampling.iml
