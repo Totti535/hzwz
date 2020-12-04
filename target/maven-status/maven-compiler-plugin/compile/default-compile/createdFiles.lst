@@ -1,5 +1,6 @@
 com\hzwz\tailbase\backendprocess\CheckSumService.class
 com\hzwz\tailbase\backendprocess\BackendController.class
+com\hzwz\tailbase\clientprocess\ClientDataSendingThread.class
 com\hzwz\tailbase\CommonController.class
 com\hzwz\tailbase\backendprocess\BackendController$1.class
 com\hzwz\tailbase\Utils.class

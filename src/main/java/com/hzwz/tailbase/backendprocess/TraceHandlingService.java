@@ -3,18 +3,18 @@ package com.hzwz.tailbase.backendprocess;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
 import com.hzwz.tailbase.Constants;
+import com.hzwz.tailbase.Utils;
 import redis.clients.jedis.Jedis;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.hzwz.tailbase.Constants.WRONG_TRACE_ID;
+import static com.hzwz.tailbase.Constants.REDIS_LOCK;
+
 
 public class TraceHandlingService implements Runnable {
-
-    Jedis jedis = new Jedis("localhost", 8003);
-
-    private static final String WRONG_TRACE_ID = "wrong_trace_id";
 
     private Map<String, String> map = new HashMap<>();
 
@@ -25,45 +25,47 @@ public class TraceHandlingService implements Runnable {
 
     @Override
     public void run() {
+        Jedis jedis = Utils.getJedis();
         jedis.del(WRONG_TRACE_ID);
+        jedis.del(REDIS_LOCK);
 
         while (true) {
-            if (jedis.setnx(Constants.REDIS_LOCK, Thread.currentThread().getName()) == 0) {
+            if (jedis.setnx(REDIS_LOCK, Thread.currentThread().getName()) == 1) {
                 map = jedis.hgetAll(WRONG_TRACE_ID);
 
                 if (!map.isEmpty()) {
                     jedis.del(WRONG_TRACE_ID);
+                }
 
-                    for (Map.Entry<String, String> entry : map.entrySet()) {
+                jedis.del(REDIS_LOCK);
 
-                        String[] cols = entry.getKey().split("\\|");
-                        int batchPos = Integer.valueOf(cols[0]);
-                        int threadNumber = Integer.valueOf(cols[1]);
-                        String traceIdListJson = entry.getValue();
+                for (Map.Entry<String, String> entry : map.entrySet()) {
 
-                        int pos = batchPos % BackendController.BATCH_COUNT;
-                        List<String> traceIdList = JSON.parseObject(traceIdListJson, new TypeReference<List<String>>() {
-                        });
+                    String[] cols = entry.getKey().split("\\|");
+                    int batchPos = Integer.valueOf(cols[0]);
+                    int threadNumber = Integer.valueOf(cols[1]);
+                    String traceIdListJson = entry.getValue();
 
-                        TraceIdBatch traceIdBatch = BackendController.TRACEID_BATCH_LIST.get(threadNumber).get(pos);
+                    int pos = batchPos % BackendController.BATCH_COUNT;
+                    List<String> traceIdList = JSON.parseObject(traceIdListJson, new TypeReference<List<String>>() {
+                    });
 
-                        if (traceIdList != null && traceIdList.size() > 0) {
-                            traceIdBatch.setBatchPos(batchPos);
-                            traceIdBatch.setProcessCount(traceIdBatch.getProcessCount() + 1);
-                            traceIdBatch.getTraceIdList().addAll(traceIdList);
-                        }
+                    TraceIdBatch traceIdBatch = BackendController.TRACEID_BATCH_LIST.get(threadNumber).get(pos);
+
+                    if (traceIdList != null && traceIdList.size() > 0) {
+                        traceIdBatch.setBatchPos(batchPos);
+                        traceIdBatch.setProcessCount(traceIdBatch.getProcessCount() + 1);
+                        traceIdBatch.getTraceIdList().addAll(traceIdList);
                     }
-                    map.clear();
+                }
+                map.clear();
 
-                    try {
-                        Thread.sleep(10);
-                    } catch (Exception ex) {
+                try {
+                    Thread.sleep(10);
+                }catch (Exception ex) {
 
-                    }
                 }
             }
         }
-
-
     }
 }

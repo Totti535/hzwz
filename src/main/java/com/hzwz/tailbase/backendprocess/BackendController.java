@@ -3,16 +3,18 @@ package com.hzwz.tailbase.backendprocess;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
 import com.hzwz.tailbase.Constants;
+import com.hzwz.tailbase.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import redis.clients.jedis.Jedis;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static com.hzwz.tailbase.Constants.PROCESS_COUNT;
+import static com.hzwz.tailbase.Constants.*;
 
 @RestController
 public class BackendController {
@@ -28,6 +30,8 @@ public class BackendController {
     // save 90 batch for wrong trace
     public static int BATCH_COUNT = 90;
     public static Map<Integer, List<TraceIdBatch>> TRACEID_BATCH_LIST = new ConcurrentHashMap<>();
+
+    private static Jedis jedis = Utils.getJedis();
 
     public static void init() {
         for (int i = 0; i < Constants.NUMBER_OF_THREAD; i++) {
@@ -115,8 +119,11 @@ public class BackendController {
                 entry.getValue().set(CURRENT_BATCH.get(entry.getKey()), newTraceIdBatch);
                 CURRENT_BATCH.put(entry.getKey(), next);
                 traceIdBatches.add(currentBatch);
+
+                //jedis.rpush(WRONG_TRACE_BATCH, JSON.toJSONString(currentBatch));
             }
         }
+
         return traceIdBatches;
     }
 

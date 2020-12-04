@@ -15,9 +15,9 @@ import java.io.BufferedReader;
 import java.util.*;
 
 
-public class ClientDataThread extends Thread {
+public class ClientDataSendingThread extends Thread {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ClientDataThread.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(ClientDataSendingThread.class.getName());
 
     public static final Object lock = new Object();
 
@@ -27,11 +27,11 @@ public class ClientDataThread extends Thread {
 
     private long partSize;
 
-    private static Jedis jedis = Utils.getJedis();
+    private Jedis jedis = new Jedis("localhost", 8003);
 
     private String port = System.getProperty("server.port", "8080");
 
-    public ClientDataThread(int threadNumber, BufferedReader bf, long partSize) {
+    public ClientDataSendingThread(int threadNumber, BufferedReader bf, long partSize) {
         this.threadNumber = threadNumber;
         this.bf = bf;
         this.partSize = partSize;

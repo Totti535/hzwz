@@ -1,6 +1,7 @@
 package com.hzwz.tailbase;
 
 import okhttp3.*;
+import redis.clients.jedis.Jedis;
 
 import java.io.IOException;
 import java.security.MessageDigest;
@@ -18,6 +19,12 @@ public class Utils {
     public static Response callHttp(Request request) throws IOException {
         Call call = OK_HTTP_CLIENT.newCall(request);
         return call.execute();
+    }
+
+    private final static Jedis jedis = new Jedis("localhost", 8003);
+
+    public static Jedis getJedis() {
+        return jedis;
     }
 
     public static long toLong(String str, long defaultValue) {
