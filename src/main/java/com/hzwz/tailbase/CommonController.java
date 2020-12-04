@@ -1,6 +1,6 @@
-package com.alibaba.tailbase;
+package com.hzwz.tailbase;
 
-import com.alibaba.tailbase.clientprocess.ClientProcessData;
+import com.hzwz.tailbase.clientprocess.ClientProcessData;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;

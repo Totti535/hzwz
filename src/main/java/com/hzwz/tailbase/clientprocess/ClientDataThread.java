@@ -1,8 +1,8 @@
-package com.alibaba.tailbase.clientprocess;
+package com.hzwz.tailbase.clientprocess;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.tailbase.Constants;
-import com.alibaba.tailbase.Utils;
+import com.hzwz.tailbase.Constants;
+import com.hzwz.tailbase.Utils;
 import okhttp3.FormBody;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -12,8 +12,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.util.*;
-
-import static com.alibaba.tailbase.clientprocess.ClientProcessData.isDev;
 
 
 public class ClientDataThread extends Thread {

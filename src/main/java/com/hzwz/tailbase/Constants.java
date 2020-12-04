@@ -1,4 +1,4 @@
-package com.alibaba.tailbase;
+package com.hzwz.tailbase;
 
 public class Constants {
 

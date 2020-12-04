@@ -1,10 +1,10 @@
-package com.alibaba.tailbase.clientprocess;
+package com.hzwz.tailbase.clientprocess;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
-import com.alibaba.tailbase.CommonController;
-import com.alibaba.tailbase.Constants;
-import com.alibaba.tailbase.Utils;
+import com.hzwz.tailbase.CommonController;
+import com.hzwz.tailbase.Constants;
+import com.hzwz.tailbase.Utils;
 import okhttp3.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +21,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
-import static com.alibaba.tailbase.Constants.NUMBER_OF_THREAD;
+import static com.hzwz.tailbase.Constants.NUMBER_OF_THREAD;
 
 
 public class ClientProcessData implements Runnable {

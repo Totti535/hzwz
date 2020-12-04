@@ -1,8 +1,8 @@
-package com.alibaba.tailbase;
+package com.hzwz.tailbase;
 
-import com.alibaba.tailbase.backendprocess.BackendController;
-import com.alibaba.tailbase.backendprocess.CheckSumService;
-import com.alibaba.tailbase.clientprocess.ClientProcessData;
+import com.hzwz.tailbase.backendprocess.BackendController;
+import com.hzwz.tailbase.backendprocess.CheckSumService;
+import com.hzwz.tailbase.clientprocess.ClientProcessData;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.ComponentScan;

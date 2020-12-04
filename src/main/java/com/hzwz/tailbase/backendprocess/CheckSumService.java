@@ -1,10 +1,10 @@
-package com.alibaba.tailbase.backendprocess;
+package com.hzwz.tailbase.backendprocess;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
-import com.alibaba.tailbase.CommonController;
-import com.alibaba.tailbase.Utils;
-import com.alibaba.tailbase.clientprocess.ClientProcessData;
+import com.hzwz.tailbase.CommonController;
+import com.hzwz.tailbase.Utils;
+import com.hzwz.tailbase.clientprocess.ClientProcessData;
 import okhttp3.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,8 +15,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
-import static com.alibaba.tailbase.Constants.CLIENT_PROCESS_PORT1;
-import static com.alibaba.tailbase.Constants.CLIENT_PROCESS_PORT2;
+import static com.hzwz.tailbase.Constants.CLIENT_PROCESS_PORT1;
+import static com.hzwz.tailbase.Constants.CLIENT_PROCESS_PORT2;
 
 public class CheckSumService implements Runnable {
 
