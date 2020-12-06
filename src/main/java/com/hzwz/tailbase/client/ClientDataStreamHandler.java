@@ -105,13 +105,17 @@ public class ClientDataStreamHandler implements Runnable {
             traceIndexBucket.tryEnter();
             // use block read
             while (channel.read(byteBuffer) != -1) {
-                ((Buffer) byteBuffer).flip();
-                int remain = byteBuffer.remaining();
-                bytes = new byte[remain];
-                System.arraycopy(((Buffer) byteBuffer).array(), 0, bytes, 0, remain);
-                ((Buffer) byteBuffer).clear();
-                // HANDLER_THREAD_POOL.execute(new BlockWorker(bytes, remain));
-                BlockWorker.run(bytes, remain);
+                try {
+                    ((Buffer) byteBuffer).flip();
+                    int remain = byteBuffer.remaining();
+                    bytes = new byte[remain];
+                    System.arraycopy(((Buffer) byteBuffer).array(), 0, bytes, 0, remain);
+                    ((Buffer) byteBuffer).clear();
+                    // HANDLER_THREAD_POOL.execute(new BlockWorker(bytes, remain));
+                    BlockWorker.run(bytes, remain);
+                }catch (Exception ex) {
+                    continue;
+                }
             }
             isFin = true;
             // last update, clear the badTraceIdSet

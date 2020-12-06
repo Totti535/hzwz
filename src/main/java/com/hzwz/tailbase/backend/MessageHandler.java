@@ -63,29 +63,39 @@ public class MessageHandler extends SimpleChannelInboundHandler<TextWebSocketFra
 
         switch (type) {
             case Constants.UPDATE_TYPE:
-                updateThread.execute(() -> {
-                    List<String> data = jsonObject.getObject("data", new TypeReference<List<String>>(){});
-                    Set<String> badTraceIdSet;
-                    int pos;
-                    JSONObject tmp;
-                    for (String updateDto : data) {
-                        tmp = JSON.parseObject(updateDto);
-                        badTraceIdSet = tmp.getObject("badTraceIdSet", new TypeReference<Set<String>>(){});
-                        pos = tmp.getObject("pos", Integer.class);
-                        setWrongTraceId(badTraceIdSet, pos);
-                    }
-                });
+                try {
+                    updateThread.execute(() -> {
+                        List<String> data = jsonObject.getObject("data", new TypeReference<List<String>>() {
+                        });
+                        Set<String> badTraceIdSet;
+                        int pos;
+                        JSONObject tmp;
+                        for (String updateDto : data) {
+                            tmp = JSON.parseObject(updateDto);
+                            badTraceIdSet = tmp.getObject("badTraceIdSet", new TypeReference<Set<String>>() {
+                            });
+                            pos = tmp.getObject("pos", Integer.class);
+                            setWrongTraceId(badTraceIdSet, pos);
+                        }
+                    });
+                } catch (Exception ex) {
+
+                }
                 break;
             case Constants.TRACE_DETAIL:
-                consumeThread.execute(() -> {
-                    List<Resp> respDetails = jsonObject.getObject("data",
-                            new TypeReference<List<Resp>>() {
-                            });
-                    for (Resp resp : respDetails) {
-                        // pull data from this pos, here is for a recent ack!
-                        consumeTraceDetails(resp.getData(), resp.getDataPos());
-                    }
-                });
+                try {
+                    consumeThread.execute(() -> {
+                        List<Resp> respDetails = jsonObject.getObject("data",
+                                new TypeReference<List<Resp>>() {
+                                });
+                        for (Resp resp : respDetails) {
+                            // pull data from this pos, here is for a recent ack!
+                            consumeTraceDetails(resp.getData(), resp.getDataPos());
+                        }
+                    });
+                } catch (Exception ex) {
+
+                }
                 break;
             case Constants.FIN_TYPE:
                 int finTime = FIN_TIME.addAndGet(1);
