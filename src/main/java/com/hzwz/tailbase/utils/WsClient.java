@@ -40,7 +40,7 @@ public class WsClient {
                     try {
                         receiveWebsocketClient = client
                                 .prepareGet("ws://localhost:8003/handle")
-                                .setRequestTimeout(10000)
+                                .setRequestTimeout(600000)
                                 .execute(TextFrameHandler.wsHandler)
                                 .get();
                         // *info("ws接收长连接建立成功......");

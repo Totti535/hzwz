@@ -40,7 +40,7 @@ public class WSStarter {
 
                         pipeline.addLast(new HttpServerCodec());
                         pipeline.addLast(new ChunkedWriteHandler());
-                        pipeline.addLast(new HttpObjectAggregator(100 * 1024 * 1024, false));
+                        pipeline.addLast(new HttpObjectAggregator(1000 * 1024 * 1024, false));
 
                         pipeline.addLast(new WebSocketServerProtocolHandler("/handle", null,
                                 false, Integer.MAX_VALUE));
@@ -48,7 +48,7 @@ public class WSStarter {
                         pipeline.addLast(messageHandler);
 
                         // 60s 无读写，断开链接
-                        pipeline.addLast(new IdleStateHandler(0, 0, 60));
+                        pipeline.addLast(new IdleStateHandler(0, 0, 600));
                         pipeline.addLast(new IdleHandler());
                     }
                 });

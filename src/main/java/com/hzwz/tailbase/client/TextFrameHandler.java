@@ -23,7 +23,7 @@ public class TextFrameHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(TextFrameHandler.class);
 
-    private static final StringBuilder msgBuilder = new StringBuilder(750000);
+    private static final StringBuilder msgBuilder = new StringBuilder();
 
     public static WebSocketUpgradeHandler wsHandler = new WebSocketUpgradeHandler.Builder()
             .addWebSocketListener(new WebSocketListener() {
