@@ -52,9 +52,9 @@ public class ClientDataStreamHandler implements Runnable {
     private static volatile int lastPartLineStartPos;
     private static boolean isFin = false;
 
-    private static final StringBuilder lineBuilder = new StringBuilder();
-    private static final StringBuilder msgBuilder = new StringBuilder();
-    private static final StringBuilder updateMsgBuilder = new StringBuilder();
+    private static final StringBuilder lineBuilder = new StringBuilder(200);
+    private static final StringBuilder msgBuilder = new StringBuilder(300);
+    private static final StringBuilder updateMsgBuilder = new StringBuilder(2000);
 
     public static void init() {
         for (int i = 0; i < Constants.CLIENT_BIG_BUCKET_COUNT; i++) {
@@ -284,7 +284,7 @@ public class ClientDataStreamHandler implements Runnable {
             int Icount = 0;
             boolean isFirstLine = true;
             StringBuilder traceIdBuilder = new StringBuilder();
-            StringBuilder tagsBuilder = new StringBuilder();
+            StringBuilder tagsBuilder = new StringBuilder(150);
             byte spl = 124; // |
             byte lf = 10;   // \n
             byte bt;
