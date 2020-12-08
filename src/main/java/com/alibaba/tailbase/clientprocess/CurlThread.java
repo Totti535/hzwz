@@ -1,6 +1,5 @@
 package com.alibaba.tailbase.clientprocess;
 
-import java.io.File;
 import java.util.concurrent.Callable;
 
 import org.slf4j.Logger;
@@ -13,41 +12,23 @@ public class CurlThread implements Callable<Boolean>{
     private long end;
     private String dest;
     private String url;
-    private int threadNumber;
 
-    public CurlThread(long start, long end, String dest, String url, int threadNumber) {
+    public CurlThread(long start, long end, String dest, String url) {
         this.start = start;
         this.end = end;
         this.dest = dest;
         this.url = url;
-        this.threadNumber = threadNumber;
     }
-
 
     @Override
     public Boolean call() {
         try {
-            String command = "";
-//            if(ClientProcessData.isDev()) {
-//                command = String.format("curl -r %s-%s -o %s\\part_%s.data %s", start, end, dest, threadNumber, url);
-//            }else {
-                command = String.format("curl -r %s-%s -o %spart_%s.data %s", start, end, dest, threadNumber, url);
-//            }
-//            LOGGER.info("calling command: " + command);
-            File f = new File(dest + "part_"+ threadNumber + ".data");
-            if(!f.exists()) {
-                Process p = Runtime.getRuntime().exec(command);
-                p.waitFor();
-
-                //split wrong trade id
-                String command2 =
-                        String.format("cd %s && awk -F '|' -vOFS='|' '{if (NF>0){if( ($9 ~ /error=1/)||($9 ~ /http.status_code=/ && $9 !~ /http.status_code=200/)){ print \"0\" >> $1\"_%s_error.data\"}}}' part_%s.data", dest, threadNumber, threadNumber);
-
-                String[] command2Arr = {"/bin/sh", "-c", command2};
-//                LOGGER.info("calling command2: " + command2);
-                Process p2 = Runtime.getRuntime().exec(command2Arr);
-                p2.waitFor();
-            }
+            //curl -r 0-255970419 http://localhost:8080/trace1.data 2>&1 | awk -F '|' -vOFS='|' '{if (NF>0){if( ($9 ~ /error=1/)||($9 ~ /http.status_code=/ && $9 !~ /http.status_code=200/)){ print '0' >> $1}}}'
+            String command = String.format("cd %s && curl -s -r %s-%s %s 2>&1 | awk -F '|' -vOFS='|' '{if (NF>0){if( ($9 ~ /error=1/)||($9 ~ /http.status_code=/ && $9 !~ /http.status_code=200/)){print '0' >> $1}}}'", dest, start, end, url);
+            LOGGER.info("Command: " + command);
+            String[] commandArr = {"/bin/sh", "-c", command};
+            Process p = Runtime.getRuntime().exec(commandArr);
+            p.waitFor();
             return true;
         } catch (Exception e) {
             e.printStackTrace();
@@ -56,3 +37,4 @@ public class CurlThread implements Callable<Boolean>{
         }
     }
 }
+
