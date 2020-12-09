@@ -51,13 +51,6 @@ public class BackendController {
     private static String PATH = "";
 
     public static void init() {
-        String port = System.getProperty("server.port", "8080");
-        //PATH = "C:/tianchi/_" + port + "/";
-        PATH = "/usr/local/src/" + port + "/";
-        File f = new File(PATH);
-        if (!f.exists()) {
-            f.mkdir();
-        }
     }
 
     @RequestMapping("/updateWrongTraceId")

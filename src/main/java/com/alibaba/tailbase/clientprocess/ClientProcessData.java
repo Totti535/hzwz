@@ -64,17 +64,9 @@ public class ClientProcessData implements Runnable {
     }
 
     private static void touji() {
-        String port = System.getProperty("server.port", "8080");
-        PATH = "/usr/local/src/" + port + "/";
-        //PATH = "C:/tianchi/_" + port + "/";
         String url = getUrl();
         LOGGER.info("data url:" + url);
         try {
-            File f = new File(PATH);
-            if (!f.exists()) {
-                f.mkdir();
-            }
-
             ExecutorService pool = Executors.newCachedThreadPool();
             CompletionService<Boolean> completionService = new ExecutorCompletionService<Boolean>(pool);
             URL u = new URL(url);
