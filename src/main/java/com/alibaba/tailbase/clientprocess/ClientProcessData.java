@@ -9,18 +9,23 @@ import java.net.HttpURLConnection;
 import java.net.Proxy;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.CompletionService;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.StringUtils;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
@@ -38,16 +43,16 @@ public class ClientProcessData implements Runnable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ClientProcessData.class.getName());
 
-    private static String PATH = "";
-    public static final int CURL_SIZE = 50;
-    public static final int DOWNLOAD_BATCH = 50;
-    public static final int SCAN_SIZE = 50;
-    public static final int SCAN_BATCH = 10;
-    public static final List<long[]> indexes = new ArrayList<long[]>();
-
+    public static String PATH = "";
+    private static final int CURL_SIZE = 200;
+    private static final int CURL_BATCH = 30;
     private static List<CurlThread> curlThreads = new ArrayList<CurlThread>();
     private static List<ScanThread> scanThreads = new ArrayList<ScanThread>();
-    private static int GREP_BATCH_SIZE = 1000;
+
+    public static Set<String> wrongTraceIds = Collections.synchronizedSet(new HashSet<String>());
+    public static Set<String> allSpans = Collections.synchronizedSet(new HashSet<String>());
+
+    public final static long BYTES_OF_20000_ROWS = 6000000;
 
     public static void init() {
 
@@ -62,6 +67,9 @@ public class ClientProcessData implements Runnable {
     public void run() {
         String port = System.getProperty("server.port", "8080");
         PATH = "/usr/local/src/" + port + "/";
+        //PATH = "C:/tianchi/_" + port + "/";
+        String url = getUrl();
+        LOGGER.info("data url:" + url);
         try {
             File f = new File(PATH);
             if (!f.exists()) {
@@ -70,11 +78,9 @@ public class ClientProcessData implements Runnable {
 
             ExecutorService pool = Executors.newCachedThreadPool();
             CompletionService<Boolean> completionService = new ExecutorCompletionService<Boolean>(pool);
-            String url = getUrl();
             URL u = new URL(url);
-            LOGGER.info("data url:" + url);
             HttpURLConnection httpConnection = (HttpURLConnection) u.openConnection(Proxy.NO_PROXY);
-            long size = httpConnection.getContentLengthLong()/8;
+            long size = httpConnection.getContentLengthLong();
             long partSize = size / CURL_SIZE;
 
             long start = 0;
@@ -98,29 +104,25 @@ public class ClientProcessData implements Runnable {
                     bis.close();
                     bf.close();
                 }
-                long[] idx = new long[2];
-                idx[0] = start;
-                idx[1] = end;
-                indexes.add(idx);
-                curlThreads.add( new CurlThread(start, end, PATH, url));
+                curlThreads.add(new CurlThread(start, end, PATH, url, size));
                 start = end;
             }
             int count = 0;
 
             for (Iterator<CurlThread> it = curlThreads.iterator(); it.hasNext();) {
                 CurlThread ct = (CurlThread) it.next();
-                if(count < DOWNLOAD_BATCH){
+                if(count < CURL_BATCH){
                     completionService.submit(ct);
                     it.remove();
                     count++;
-                }else if(count == DOWNLOAD_BATCH){
+                }else if(count == CURL_BATCH){
                     completionService.take();
                     it = curlThreads.iterator();
                     count--;
                 }
             }
             //wait the remaining workers complete.
-            for (int i = 0; i < DOWNLOAD_BATCH; i++) {
+            for (int i = 0; i < CURL_BATCH; i++) {
                 completionService.take();
             }
             pool.shutdown();
@@ -132,73 +134,136 @@ public class ClientProcessData implements Runnable {
         }
 
         try {
-            File folder = new File(PATH);
-            updateWrongTraceId(Arrays.asList(folder.list()));
+            //File folder = new File(PATH);
+            //List<String> filenames = Arrays.asList(folder.list());
 
-            Set<String> allWti = getAllWrongTraceIds();
+            //using for grep all spans before send to blue block;
+            Map<String, List<String>> rangeWithTraceIds = new HashMap<String, List<String>>();
+            //using for integrate trade ids in blue block;
+            Map<String, List<String>> tradeIdWithRanges = new HashMap<String, List<String>>();
 
-            int i = 1;
 
-            StringBuffer sb = new StringBuffer();
-            List<String> commandList = new ArrayList<String>();
-
-            for (String traceId : allWti) {
-                if(i >= GREP_BATCH_SIZE) {
-                    sb.append(traceId);
+            for (String filename : wrongTraceIds) {
+                //for testing
+                if(StringUtils.endsWithIgnoreCase(filename, ".data") || StringUtils.endsWithIgnoreCase(filename, ".tar.gz") ) {
+                    continue;
+                }
+                String[] ss = StringUtils.split(filename, "_");
+                String wrongTraceId = ss[0];
+                String range = ss[1];
+                List<String> wrongTraceIds = rangeWithTraceIds.get(range);
+                if(wrongTraceIds == null) {
+                    wrongTraceIds = new ArrayList<String>();
+                    wrongTraceIds.add(wrongTraceId);
+                    rangeWithTraceIds.put(range, wrongTraceIds);
+                } else {
+                    wrongTraceIds.add(wrongTraceId);
+                }
+                List<String> ranges = tradeIdWithRanges.get(wrongTraceId);
+                if(ranges == null) {
+                    ranges = new ArrayList<String>();
+                    ranges.add(range);
+                    tradeIdWithRanges.put(wrongTraceId, ranges);
                 }else {
-                    sb.append(traceId + "|");
+                    ranges.add(range);
                 }
-                if(i % GREP_BATCH_SIZE == 0) {
-                    commandList.add(sb.toString());
-                    sb = new StringBuffer();
-                    i = 1;
-                }
-                i++;
-            }
-            commandList.add(sb.toString());
-
-            ExecutorService pool2 =Executors.newCachedThreadPool();
-            CompletionService<Boolean> completionService2 = new ExecutorCompletionService<Boolean>(pool2);
-
-            String url = getUrl();
-            for (int j = 0; j < SCAN_SIZE; j++) {
-                long[] idx = indexes.get(j);
-                long start = idx[0];
-                long end = idx[1];
-                scanThreads.add(new ScanThread(start, end, PATH, url, commandList, (j+1)));
             }
 
+            LOGGER.info("Got Range with Trace Ids: " + rangeWithTraceIds.size());
+            LOGGER.info("Got Trace with Ranges: " + tradeIdWithRanges.size());
+
+            {
+                ExecutorService pool2 =Executors.newCachedThreadPool();
+                CompletionService<Boolean> completionService2 = new ExecutorCompletionService<Boolean>(pool2);
+
+                Iterator<Entry<String, List<String>>>  itt = rangeWithTraceIds.entrySet().iterator();
+
+                while (itt.hasNext()) {
+                    Entry<String, List<String>> e = itt.next();
+                    scanThreads.add(new ScanThread(e, PATH, url));
+                }
 
                 int count = 0;
-            for (Iterator<ScanThread> it = scanThreads.iterator(); it.hasNext();) {
-                ScanThread st = (ScanThread) it.next();
-                if(count < SCAN_BATCH){
-                    completionService2.submit(st);
-                    it.remove();
-                    count++;
-                }else if(count == SCAN_BATCH){
+                for (Iterator<ScanThread> it = scanThreads.iterator(); it.hasNext();) {
+                    ScanThread st = (ScanThread) it.next();
+                    if(count < CURL_BATCH){
+                        completionService2.submit(st);
+                        it.remove();
+                        count++;
+                    }else if(count == CURL_BATCH){
+                        completionService2.take();
+                        it = scanThreads.iterator();
+                        count--;
+                    }
+                }
+                //wait the remaining workers complete.
+                for (int k = 0; k < CURL_BATCH; k++) {
                     completionService2.take();
-                    it = scanThreads.iterator();
-                    count--;
+                }
+                pool2.shutdown();
+            }
+
+            Map<String, List<String>> remainingTradeIdWithRange  = updateWrongTraceId(tradeIdWithRanges, port);
+            Map<String, List<String>> remainingRangeWithTraceIds = new HashMap<String, List<String>>();
+            //convert to remainingRangeWithTraceId
+            {
+                Iterator<Entry<String, List<String>>> it = remainingTradeIdWithRange.entrySet().iterator();
+                while (it.hasNext()) {
+                    Entry<String, List<String>> e = it	.next();
+                    List<String> ranges = e.getValue();
+                    for (String range : ranges) {
+                        List<String> traceIds = remainingRangeWithTraceIds.get(range);
+                        if(traceIds == null) {
+                            traceIds = new ArrayList<String>();
+                            traceIds.add(e.getKey());
+                            remainingRangeWithTraceIds.put(range, traceIds);
+                        } else {
+                            traceIds.add(e.getKey());
+                        }
+                    }
                 }
             }
-            //wait the remaining workers complete.
-            for (int k = 0; k < SCAN_BATCH; k++) {
-                completionService2.take();
+
+            LOGGER.info("Got Remaining Range with Trace Ids: " + remainingRangeWithTraceIds.size());
+            LOGGER.info("Got Remaining Trace with Ranges: " + remainingTradeIdWithRange.size());
+
+            {
+                ExecutorService pool3 =Executors.newCachedThreadPool();
+                CompletionService<Boolean> completionService3 = new ExecutorCompletionService<Boolean>(pool3);
+
+                Iterator<Entry<String, List<String>>>  ittt = remainingRangeWithTraceIds.entrySet().iterator();
+
+                while (ittt.hasNext()) {
+                    Entry<String, List<String>> e = ittt.next();
+                    scanThreads.add(new ScanThread(e, PATH, url));
+                }
+
+                int count = 0;
+                for (Iterator<ScanThread> it = scanThreads.iterator(); it.hasNext();) {
+                    ScanThread st = (ScanThread) it.next();
+                    if(count < CURL_BATCH){
+                        completionService3.submit(st);
+                        it.remove();
+                        count++;
+                    }else if(count == CURL_BATCH){
+                        completionService3.take();
+                        it = scanThreads.iterator();
+                        count--;
+                    }
+                }
+                //wait the remaining workers complete.
+                for (int k = 0; k < CURL_BATCH; k++) {
+                    completionService3.take();
+                }
+                pool3.shutdown();
             }
-            pool2.shutdown();
 
-//            String port = System.getProperty("server.port", "8080");
+            File f = new File(PATH + "result_" + port + ".data");
 
-//            call command cat file
-            String catCommand = String.format("cd %s && cat spans_*.data > result_%s.data", PATH, port);
-            String[] commandArr = {"/bin/sh", "-c", catCommand};
-            LOGGER.info("Calling command: " + catCommand);
-            Process p = Runtime.getRuntime().exec(commandArr);
-            p.waitFor();
+            FileUtils.writeLines(f, "UTF-8", allSpans);
 
             //call command zip file
-            String zipCommand = String.format("cd %s && zip -q result_%s.zip result_%s.data", PATH, port, port);
+            String zipCommand = String.format("cd %s && tar -zcvf result_%s.tar.gz result_%s.data", PATH, port, port);
             String[] commandArr2 = {"/bin/sh", "-c", zipCommand};
             LOGGER.info("Calling command: " + zipCommand);
             Process p2 = Runtime.getRuntime().exec(commandArr2);
@@ -220,40 +285,36 @@ public class ClientProcessData implements Runnable {
         return httpConnection.getInputStream();
     }
 
-    private void updateWrongTraceId(List<String> wrongTradeIds) {
+    private Map<String, List<String>> updateWrongTraceId(Map<String, List<String>> wrongTradeIds, String port) {
+
+        Map<String, List<String>> remaining = new HashMap<String, List<String>>();
+
         try {
+
             String json = JSON.toJSONString(wrongTradeIds);
-            RequestBody body = new FormBody.Builder().add("wrongTradeIdsStr", json).build();
+            RequestBody body = new FormBody.Builder()
+                    .add("wrongTradeIdsStr", json)
+                    .add("port", port)
+                    .build();
             Request request = new Request.Builder().url("http://localhost:8002/updateWrongTraceId").post(body).build();
             Response response = Utils.callHttp(request);
+            remaining = JSON.parseObject(response.body().string(), new TypeReference<Map<String, List<String>>>(){});
             response.close();
         } catch (Exception e) {
             e.printStackTrace();
             LOGGER.error("fail to updateWrongTraceId, wrongTradeIds:" + wrongTradeIds, e.getMessage());
         }
+        return remaining;
     }
-
-    private Set<String> getAllWrongTraceIds() {
-        Set<String> wrongTraceIds = new HashSet<String>();
-        try {
-            Request request = new Request.Builder().url("http://localhost:8002/getWrongTraceIds").build();
-            Response response= Utils.callHttp(request);
-            wrongTraceIds = JSON.parseObject(response.body().string(), new TypeReference<Set<String>>(){});
-            response.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-            LOGGER.error("fail to getWrongTraceIds", e);
-        }
-        return wrongTraceIds;
-    }
-
 
     private void sendResultFile() {
         try {
             String port = System.getProperty("server.port", "8080");
-            File zipFile = new File(PATH + "result_" + port + ".zip");
+            File zipFile = new File(PATH + "result_" + port + ".tar.gz");
             if(zipFile.exists()){
-                RequestBody body = new MultipartBody.Builder().addFormDataPart("file", zipFile.getName(), RequestBody.create(MediaType.parse("media/type"), zipFile)).build();
+                RequestBody body = new MultipartBody.Builder()
+                        .addFormDataPart("file", zipFile.getName(), RequestBody.create(MediaType.parse("media/type"), zipFile))
+                        .build();
                 Request request = new Request.Builder().url("http://localhost:8002/sendResultFile").post(body).build();
                 Response response = Utils.callHttp(request);
                 response.close();
@@ -304,6 +365,10 @@ public class ClientProcessData implements Runnable {
     }
 
 }
+
+
+
+
 
 
 

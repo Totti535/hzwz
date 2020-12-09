@@ -5,7 +5,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -38,7 +37,12 @@ import okhttp3.Response;
 public class BackendController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BackendController.class.getName());
-    public Set<String> wrongTradeIds = Collections.synchronizedSet(new HashSet<String>());
+
+    public Map<String, List<String>> wrong_8000 = new ConcurrentHashMap<String, List<String>>();
+    public Map<String, List<String>> wrong_8001 = new ConcurrentHashMap<String, List<String>>();
+    public Map<String, List<String>> wrong_return_8000 = new ConcurrentHashMap<String, List<String>>();
+    public Map<String, List<String>> wrong_return_8001 = new ConcurrentHashMap<String, List<String>>();
+
     public Map<String, Set<String>> resultMap = new ConcurrentHashMap<String, Set<String>>();
     public Map<String, String> TRACE_CHECKSUM_MAP = new ConcurrentHashMap<String, String>();
     public volatile Integer FINISH_PROCESS_COUNT = 0;
@@ -48,40 +52,72 @@ public class BackendController {
 
     public static void init() {
         String port = System.getProperty("server.port", "8080");
+        //PATH = "C:/tianchi/_" + port + "/";
         PATH = "/usr/local/src/" + port + "/";
+        File f = new File(PATH);
+        if (!f.exists()) {
+            f.mkdir();
+        }
     }
 
     @RequestMapping("/updateWrongTraceId")
-    private String updateWrongTraceId(@RequestParam String wrongTradeIdsStr) {
+    private String updateWrongTraceId(@RequestParam String wrongTradeIdsStr, @RequestParam String port) {
+
+        Map<String, List<String>> result = new ConcurrentHashMap<String, List<String>>();
+
         try {
-            List<String> list = JSON.parseObject(wrongTradeIdsStr, new TypeReference<List<String>>(){});
-            wrongTradeIds.addAll(list);
-            UPDATED_COUNT ++;
-            LOGGER.info(String.format("updateWrongTraceId had been called, wrongTradeIds:%s", wrongTradeIds.size()));
+            if (Constants.CLIENT_PROCESS_PORT1.equals(port)) {
+                wrong_8000 = JSON.parseObject(wrongTradeIdsStr, new TypeReference<Map<String, List<String>>>() {
+                });
+                wrong_return_8000 = JSON.parseObject(wrongTradeIdsStr, new TypeReference<Map<String, List<String>>>() {
+                });
+                LOGGER.info(String.format("Received Client<8000> Wrong Trade Ids : %s", wrong_8000.size()));
+            }
+            if (Constants.CLIENT_PROCESS_PORT2.equals(port)) {
+                wrong_8001 = JSON.parseObject(wrongTradeIdsStr, new TypeReference<Map<String, List<String>>>() {
+                });
+                wrong_return_8001 = JSON.parseObject(wrongTradeIdsStr, new TypeReference<Map<String, List<String>>>() {
+                });
+                LOGGER.info(String.format("Received Client<8001> Wrong Trade Ids : %s", wrong_8001.size()));
+            }
+            UPDATED_COUNT++;
+            while (true) {
+                try {
+                    Thread.sleep(10);
+                    if (UPDATED_COUNT == 2) {
+                        break;
+                    }
+                } catch (Exception e) {
+                }
+            }
+            //if 8000, remove all 8000 trace id in 8001
+            if (Constants.CLIENT_PROCESS_PORT1.equals(port)) {
+                Set<String> keys = wrong_8000.keySet();
+                for (String traceId : keys) {
+                    wrong_return_8001.remove(traceId);
+                }
+                result = wrong_return_8001;
+                LOGGER.info(String.format("Return to Client<8000> Wrong Trade Ids : %s", result.size()));
+            }
+
+            if (Constants.CLIENT_PROCESS_PORT2.equals(port)) {
+                Set<String> keys = wrong_8001.keySet();
+                for (String traceId : keys) {
+                    wrong_return_8000.remove(traceId);
+                }
+                result = wrong_return_8000;
+                LOGGER.info(String.format("Return to Client<8000> Wrong Trade Ids : %s", result.size()));
+            }
         } catch (Exception e) {
             LOGGER.error("updateWrongTraceId failed", e.getMessage());
         }
-        return "suc";
+        return JSON.toJSONString(result);
     }
-
-    @RequestMapping("/getWrongTraceIds")
-    private String getWrongTraceIds() {
-        while (true) {
-            try {
-                Thread.sleep(10);
-                if(UPDATED_COUNT == 2) {
-                    break;
-                }
-            } catch (Exception e) {}
-        }
-        return JSON.toJSONString(wrongTradeIds);
-    }
-
 
     @PostMapping("/sendResultFile")
     public String sendResultFile(@RequestParam MultipartFile file) {
         try {
-            File f = new File(PATH + file.getName());
+            File f = new File(PATH + file.getOriginalFilename());
             LOGGER.info("Get MultipartFile : " + file.getName());
             file.transferTo(f);
         } catch (Exception e) {
@@ -93,8 +129,9 @@ public class BackendController {
 
     @RequestMapping("/setWrongTraceMap")
     public String setWrongTraceMap(@RequestParam String wrongTraceMap, @RequestParam Integer port) {
-        Map<String, Set<String>> processMap = JSON.parseObject(wrongTraceMap, new TypeReference<Map<String, Set<String>>>() {});
-        if(processMap == null || CollectionUtils.isEmpty(processMap)) {
+        Map<String, Set<String>> processMap = JSON.parseObject(wrongTraceMap, new TypeReference<Map<String, Set<String>>>() {
+        });
+        if (processMap == null || CollectionUtils.isEmpty(processMap)) {
             return "nothing to setWrongTraceMap.";
         }
         for (Map.Entry<String, Set<String>> entry : processMap.entrySet()) {
@@ -116,13 +153,13 @@ public class BackendController {
             LOGGER.warn("receive call 'finish', count:" + FINISH_PROCESS_COUNT);
 
             //call command zip file
-            String unZipCommand = String.format("cd %s && unzip -q result_%s.zip result_%s.data", PATH, Constants.CLIENT_PROCESS_PORT1, Constants.CLIENT_PROCESS_PORT1);
+            String unZipCommand = String.format("cd %s && tar -zxvf result_%s.tar.gz", PATH, Constants.CLIENT_PROCESS_PORT1);
             String[] commandArr = {"/bin/sh", "-c", unZipCommand};
             LOGGER.info("Calling command: " + unZipCommand);
             Process p = Runtime.getRuntime().exec(commandArr);
             p.waitFor();
 
-            String unZipCommand2 = String.format("cd %s && unzip -q result_%s.zip result_%s.data", PATH, Constants.CLIENT_PROCESS_PORT2, Constants.CLIENT_PROCESS_PORT2);
+            String unZipCommand2 = String.format("cd %s && tar -zxvf result_%s.tar.gz", PATH, Constants.CLIENT_PROCESS_PORT2);
             String[] commandArr2 = {"/bin/sh", "-c", unZipCommand2};
             LOGGER.info("Calling command: " + unZipCommand2);
             Process p2 = Runtime.getRuntime().exec(commandArr2);
@@ -148,7 +185,7 @@ public class BackendController {
                 String[] cols = line.split("\\|");
                 String traceId = cols[0];
                 set = resultMap.get(traceId);
-                if(set == null) {
+                if (set == null) {
                     set = new HashSet<String>();
                     set.add(line);
                     resultMap.put(traceId, set);
@@ -203,8 +240,12 @@ public class BackendController {
         }
         return -1;
     }
-
 }
+
+
+
+
+
 
 
 
