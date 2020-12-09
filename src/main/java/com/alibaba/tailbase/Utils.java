@@ -12,8 +12,8 @@ import java.util.concurrent.TimeUnit;
 public class Utils {
 
     private final static OkHttpClient OK_HTTP_CLIENT = new OkHttpClient.Builder()
-            .connectTimeout(50L,TimeUnit.SECONDS)
-                        .readTimeout(60L, TimeUnit.SECONDS)
+            .connectTimeout(600L,TimeUnit.SECONDS)
+                        .readTimeout(600L, TimeUnit.SECONDS)
                         .build();
 
     public static Response callHttp(Request request) throws IOException {

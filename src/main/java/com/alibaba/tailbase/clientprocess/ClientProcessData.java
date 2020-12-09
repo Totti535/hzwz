@@ -261,18 +261,18 @@ public class ClientProcessData implements Runnable {
             }
             pool3.shutdown();
 
-            File f = new File(PATH + "result_" + port + ".data");
+            //File f = new File(PATH + "result_" + port + ".data");
 
-            FileUtils.writeLines(f, "UTF-8", allSpans);
+            //FileUtils.writeLines(f, "UTF-8", allSpans);
 
             //call command zip file
-            String zipCommand = String.format("cd %s && tar -zcvf result_%s.tar.gz result_%s.data", PATH, port, port);
-            String[] commandArr2 = {"/bin/sh", "-c", zipCommand};
-            LOGGER.info("Calling command: " + zipCommand);
-            Process p2 = Runtime.getRuntime().exec(commandArr2);
-            p2.waitFor();
+            //String zipCommand = String.format("cd %s && tar -zcvf result_%s.tar.gz result_%s.data", PATH, port, port);
+            //String[] commandArr2 = {"/bin/sh", "-c", zipCommand};
+            //LOGGER.info("Calling command: " + zipCommand);
+            //Process p2 = Runtime.getRuntime().exec(commandArr2);
+            //p2.waitFor();
 
-            sendResultFile();
+            //sendResultFile(allSpans);
             callFinish();
         } catch (Exception e) {
             e.printStackTrace();
@@ -311,14 +311,16 @@ public class ClientProcessData implements Runnable {
         return remaining;
     }
 
-    private void sendResultFile() {
+    private void sendResultFile(Set<String> allSpans) {
         try {
             String port = System.getProperty("server.port", "8080");
             File zipFile = new File(PATH + "result_" + port + ".tar.gz");
             if (zipFile.exists()) {
-                RequestBody body = new MultipartBody.Builder()
-                        .addFormDataPart("file", zipFile.getName(), RequestBody.create(MediaType.parse("media/type"), zipFile))
-                        .build();
+                //RequestBody body = new MultipartBody.Builder()
+                //        .addFormDataPart("file", zipFile.getName(), RequestBody.create(MediaType.parse("media/type"), zipFile))
+                //        .build();
+
+                RequestBody body = new FormBody.Builder().add("spans", JSON.toJSONString(allSpans)).build();
                 Request request = new Request.Builder().url("http://localhost:8002/sendResultFile").post(body).build();
                 Response response = Utils.callHttp(request);
                 response.close();
@@ -355,13 +357,13 @@ public class ClientProcessData implements Runnable {
             if (isDev()) {
                 return "http://localhost:8080/trace1.data";
             } else {
-                return "http://localhost:" + CommonController.getDataSourcePort() + "/trace1.data";
+                return "http://localhost:9000/trace1.data";
             }
         } else if ("8001".equals(port)) {
             if (isDev()) {
                 return "http://localhost:8080/trace2.data";
             } else {
-                return "http://localhost:" + CommonController.getDataSourcePort() + "/trace2.data";
+                return "http://localhost:9000/trace2.data";
             }
         } else {
             return null;

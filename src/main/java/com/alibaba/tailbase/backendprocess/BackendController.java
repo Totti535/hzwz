@@ -1,16 +1,16 @@
 package com.alibaba.tailbase.backendprocess;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.Proxy;
+import java.net.URL;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -114,6 +114,7 @@ public class BackendController {
         return JSON.toJSONString(result);
     }
 
+    /*
     @PostMapping("/sendResultFile")
     public String sendResultFile(@RequestParam MultipartFile file) {
         try {
@@ -126,6 +127,8 @@ public class BackendController {
         }
         return "suc";
     }
+    */
+
 
     @RequestMapping("/setWrongTraceMap")
     public String setWrongTraceMap(@RequestParam String wrongTraceMap, @RequestParam Integer port) {
@@ -152,49 +155,81 @@ public class BackendController {
         if (FINISH_PROCESS_COUNT == 2) {
             LOGGER.warn("receive call 'finish', count:" + FINISH_PROCESS_COUNT);
 
-            //call command zip file
-            String unZipCommand = String.format("cd %s && tar -zxvf result_%s.tar.gz", PATH, Constants.CLIENT_PROCESS_PORT1);
-            String[] commandArr = {"/bin/sh", "-c", unZipCommand};
-            LOGGER.info("Calling command: " + unZipCommand);
-            Process p = Runtime.getRuntime().exec(commandArr);
-            p.waitFor();
+            CountDownLatch countDownLatch = new CountDownLatch(2);
 
-            String unZipCommand2 = String.format("cd %s && tar -zxvf result_%s.tar.gz", PATH, Constants.CLIENT_PROCESS_PORT2);
-            String[] commandArr2 = {"/bin/sh", "-c", unZipCommand2};
-            LOGGER.info("Calling command: " + unZipCommand2);
-            Process p2 = Runtime.getRuntime().exec(commandArr2);
-            p2.waitFor();
+            Thread t1 = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
 
+                        LOGGER.info("start to get data from 8000.");
+                        Set<String> set = null;
+                        URL url1 = new URL("http://localhost:8000/getData");
+                        HttpURLConnection httpConnection1 = (HttpURLConnection) url1.openConnection(Proxy.NO_PROXY);
+                        InputStream input1 = httpConnection1.getInputStream();
 
-            //call command cat file
-            String catCommand = String.format("cd %s && cat result_*.data > all_result.data", PATH);
-            String[] commandArr3 = {"/bin/sh", "-c", catCommand};
-            LOGGER.info("Calling command: " + catCommand);
+                        BufferedReader bf1 = new BufferedReader(new InputStreamReader(input1));
+                        String line;
+                        while ((line = bf1.readLine()) != null) {
 
-            Process p3 = Runtime.getRuntime().exec(commandArr3);
-            p3.waitFor();
-
-            File f = new File(PATH + "all_result.data");
-            InputStream input = new FileInputStream(f);
-            BufferedReader bf = new BufferedReader(new InputStreamReader(input));
-
-            String line;
-            Set<String> set = null;
-
-            while ((line = bf.readLine()) != null) {
-                String[] cols = line.split("\\|");
-                String traceId = cols[0];
-                set = resultMap.get(traceId);
-                if (set == null) {
-                    set = new HashSet<String>();
-                    set.add(line);
-                    resultMap.put(traceId, set);
-                } else {
-                    set.add(line);
+                            String[] cols = line.split("\\|");
+                            String traceId = cols[0];
+                            set = resultMap.get(traceId);
+                            if (set == null) {
+                                set = new HashSet<String>();
+                                set.add(line);
+                                resultMap.put(traceId, set);
+                            } else {
+                                set.add(line);
+                            }
+                        }
+                        bf1.close();
+                        input1.close();
+                        countDownLatch.countDown();
+                    } catch (Exception ex) {
+                    }
                 }
-            }
-            bf.close();
-            input.close();
+            });
+
+
+            Thread t2 = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+
+                        LOGGER.info("start to get data from 8001.");
+                        Set<String> set = null;
+                        URL url2 = new URL("http://localhost:8001/getData");
+                        HttpURLConnection httpConnection2 = (HttpURLConnection) url2.openConnection(Proxy.NO_PROXY);
+                        InputStream input2 = httpConnection2.getInputStream();
+
+                        BufferedReader bf2 = new BufferedReader(new InputStreamReader(input2));
+                        String line;
+                        while ((line = bf2.readLine()) != null) {
+
+                            String[] cols = line.split("\\|");
+                            String traceId = cols[0];
+                            set = resultMap.get(traceId);
+                            if (set == null) {
+                                set = new HashSet<String>();
+                                set.add(line);
+                                resultMap.put(traceId, set);
+                            } else {
+                                set.add(line);
+                            }
+                        }
+                        bf2.close();
+                        input2.close();
+                        countDownLatch.countDown();
+                    } catch (Exception ex) {
+                    }
+                }
+            });
+
+            t1.start();
+            t2.start();
+
+            countDownLatch.await();
 
             for (Map.Entry<String, Set<String>> entry : resultMap.entrySet()) {
                 String traceId = entry.getKey();
