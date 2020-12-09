@@ -55,7 +55,7 @@ public class ClientProcessData implements Runnable {
     public final static long BYTES_OF_20000_ROWS = 6000000;
 
     public static void init() {
-        touji();
+
     }
 
     public static void start() {
@@ -135,7 +135,7 @@ public class ClientProcessData implements Runnable {
 
     @Override
     public void run() {
-
+        touji();
 
         try {
             //File folder = new File(PATH);
@@ -357,13 +357,13 @@ public class ClientProcessData implements Runnable {
             if (isDev()) {
                 return "http://localhost:8080/trace1.data";
             } else {
-                return "http://localhost:9000/trace1.data";
+                return "http://localhost:" + CommonController.getDataSourcePort() + "/trace1.data";
             }
         } else if ("8001".equals(port)) {
             if (isDev()) {
                 return "http://localhost:8080/trace2.data";
             } else {
-                return "http://localhost:9000/trace2.data";
+                return "http://localhost:" + CommonController.getDataSourcePort() + "/trace2.data";
             }
         } else {
             return null;
